@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:student_assistant/routes/routemanager.dart';
+import 'package:student_assistant/viewmodels/student_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import 'views/application_form_screen.dart';
+import 'viewmodels/student_view_model.dart';
 
 Future<void> main() async {
   try {
@@ -15,7 +20,6 @@ Future<void> main() async {
   } catch (e) {
     // Handle initialization errors if necessary
     print('Error initializing Supabase: $e');
-  
   }
 }
 
@@ -24,12 +28,20 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello, Supabase!'))),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => StudentViewModel(Supabase.instance.client),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Student Assistant',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        
+        initialRoute: RouteManager.splash,
+        onGenerateRoute: RouteManager.GenerateRoute,
+      ),
     );
-  }
-
-  void dispose() {
-    // Clean up resources if necessary
   }
 }

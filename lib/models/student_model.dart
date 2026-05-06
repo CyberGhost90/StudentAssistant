@@ -1,21 +1,23 @@
-class StudentModel {
+class Student {
   String? studentEmail;
-  String? FirstName;
+  String? firstName;
   String? Surname;
+  String? password;
   String? module1;
   String? module2;
   String? supportingDocumentUrl;
-  String? Status;
+  String? status;
   DateTime? submissionDate;
 
-  StudentModel({
+  Student({
     this.studentEmail,
-    this.FirstName,
+    this.firstName,
     this.Surname,
+    this.password,
     this.module1,
     this.module2,
     this.supportingDocumentUrl,
-    this.Status,
+    this.status,
     this.submissionDate,
   });
 }
