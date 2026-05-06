@@ -4,6 +4,7 @@ import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+//relevant people should update this to make it useful and test the code- KING
 class Repository {
   //storage for all the data that we want to use in the app
   Admin? _admin;

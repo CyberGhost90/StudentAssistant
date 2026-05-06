@@ -124,6 +124,7 @@ class StudentViewModel extends ChangeNotifier {
       }
 
       // Check if the user has already submitted an application
+      //this will give an error,check columns and database before - KING
       final existingApplications = await _supabaseClient
           .from('student_applications')
           .select('id')

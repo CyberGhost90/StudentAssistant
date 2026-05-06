@@ -3,7 +3,10 @@ import 'package:student_assistant/main.dart';
 
 class RouteManager {
   static const String splash = '/splash';
-  static const String home = '/home';
+  static const String login = '/login';
+  static const String studHome = '/studHome';
+  static const String adminHome = '/adminHome';
+  static const String register = '/register';
   static const String applicationForm = '/applicationForm';
   static const String profile = '/profile';
   static const String logout = '/logout';
@@ -14,7 +17,7 @@ class RouteManager {
         return MaterialPageRoute(builder: (context) => const MainApp());
       //To be implemented: SplashScreen() after creating the splash screen widget
       //MaterialPageRoute(builder: (_) => const SplashScreen());
-      case home:
+      case studHome:
         return MaterialPageRoute(builder: (context) => const MainApp());
 
       //To be implemented: HomeScreen() after creating the home screen widget
