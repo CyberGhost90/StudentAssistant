@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import 'views/application_form_screen.dart';
+import 'view_models/student_view_model.dart';
 
 Future<void> main() async {
   try {
@@ -15,7 +18,6 @@ Future<void> main() async {
   } catch (e) {
     // Handle initialization errors if necessary
     print('Error initializing Supabase: $e');
-    git 
   }
 }
 
@@ -24,12 +26,23 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello, Supabase!'))),
-    );
-  }
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => StudentViewModel(Supabase.instance.client),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Student Assistant',
+        theme: ThemeData(primarySwatch: Colors.blue),
 
-  void dispose() {
-    // Clean up resources if necessary
+        // Define routes
+        routes: {'/form': (context) => const ApplicationFormScreen()},
+
+        // Decide which route loads first
+        initialRoute: '/form',
+      ),
+    );
   }
 }
