@@ -15,8 +15,30 @@ class Repository {
   Admin? get admin => _admin;
   Student? get student => _student;
 
+  Future<Iterable<Student>> getStudents() async {
+    try {
+      final response = await studentClient.select();
+      if (response.isEmpty != true) {
+        return (response as List).map(
+          (e) => Student(
+            studentEmail: e['studentEmail'],
+            password: e['password'],
+            firstName: e['FirstName'],
+            Surname: e['Surname'],
+          ),
+        );
+      } else {
+        Exceptionerror.SnackBarError;
+        return [];
+      }
+    } catch (e) {
+      Exceptionerror.SnackBarError;
+      return [];
+    }
+  }
+
   //READ
-  Future<void> getAdmin(Admin admin) async {
+  Future<Admin> getAdmin(Admin admin) async {
     try {
       final response = await adminClient
           .select()
@@ -31,12 +53,14 @@ class Repository {
       } else {
         Exceptionerror.SnackBarError;
       }
+      return admin;
     } catch (e) {
       Exceptionerror.SnackBarError;
+      return admin;
     }
   }
 
-  Future<void> getStudent(Student student) async {
+  Future<Student> getStudent(Student student) async {
     try {
       final response = await studentClient
           .select()
@@ -54,24 +78,52 @@ class Repository {
       } else {
         Exceptionerror.SnackBarError;
       }
+      return student;
     } catch (e) {
       Exceptionerror.SnackBarError;
+      return student;
     }
   }
 
   //CREATE
-  void createAdmin(Admin admin) {
-    _admin = admin;
+  Future<Admin> createAdmin(Admin admin) async {
+    try {
+      admin = await adminClient.insert({
+        'AdminEmail': admin.email,
+        'password': admin.password,
+        'FirstName': admin.FirstName,
+        'Surname': admin.Surname,
+      });
+      // Update the local admin variable after successful insertion
+      _admin = admin;
+      return admin;
+    } catch (e) {
+      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      return admin; // Return the original admin object in case of an error
+    }
   }
 
-  void createStudent(Student student) {
-    _student = student;
+  Future<Student> createStudent(Student student) async {
+    try {
+      student = await studentClient.insert({
+        'studentEmail': student.studentEmail,
+        'password': student.password,
+        'FirstName': student.firstName,
+        'Surname': student.Surname,
+      });
+      // Update the local student variable after successful insertion
+      _student = student;
+      return student;
+    } catch (e) {
+      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      return student; // Return the original student object in case of an error
+    }
   }
 
   //UPDATE
-  Future<Admin> updateAdmin(Admin admin) async {
+  Future<void> updateAdmin(Admin admin) async {
     try {
-      admin = await adminClient
+      await adminClient
           .update({
             'AdminEmail': admin.email,
             'password': admin.password,
@@ -79,16 +131,14 @@ class Repository {
             'Surname': admin.Surname,
           })
           .eq('AdminEmail', admin.email.toString());
-      return admin;
     } catch (e) {
       Exceptionerror.SnackBarError;
-      return admin;
     }
   }
 
-  Future<Student> updateStudent(Student student) async {
+  Future<void> updateStudent(Student student) async {
     try {
-      student = await studentClient
+      await studentClient
           .update({
             'studentEmail': student.studentEmail,
             'password': student.password,
@@ -96,10 +146,8 @@ class Repository {
             'Surname': student.Surname,
           })
           .eq('studentEmail', student.studentEmail.toString());
-      return student;
     } catch (e) {
       Exceptionerror.AlertDialogError(e.toString() as BuildContext);
-      return student;
     }
   }
 

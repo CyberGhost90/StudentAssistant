@@ -4,8 +4,6 @@ import 'package:student_assistant/routes/routemanager.dart';
 import 'package:student_assistant/viewmodels/student_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
-import 'views/application_form_screen.dart';
-import 'viewmodels/student_view_model.dart';
 
 Future<void> main() async {
   try {

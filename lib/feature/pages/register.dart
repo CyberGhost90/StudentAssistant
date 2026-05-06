@@ -16,8 +16,13 @@ class _LoginState extends State<Login> {
   final AuthService _authService = AuthService();
   //form key
   final _formKey = GlobalKey<FormState>();
-  Admin admin = Admin(firstName: '', surname: '', email: '', password: '');
-  Student student = Student(email: '', FirstName: '', Surname: '', password: '');
+  Admin admin = Admin(FirstName: '', Surname: '', email: '', password: '');
+  Student student = Student(
+    studentEmail: '',
+    firstName: '',
+    Surname: '',
+    password: '',
+  );
 
   //text controllers
   final TextEditingController _emailController = TextEditingController();
@@ -39,19 +44,26 @@ class _LoginState extends State<Login> {
       await _authService.registerWithEmail(email, password);
       // Navigate to home screen on successful register
       if (email.contains('@stud.cut.ac.za')) {
-        
-        student=Student(email: email, FirstName: firstName, Surname: surname, password: password);
-        
+        student = Student(
+          studentEmail: email,
+          firstName: firstName,
+          Surname: surname,
+          password: password,
+        );
+
         Navigator.pushAndRemoveUntil(
           context,
           RouteManager.studHome as Route<Object?>,
           (route) => false,
         );
-      
       } else if (email.contains('@cut.ac.za')) {
-        
-        admin=Admin(email: email, firstName: firstName, surname: surname, password: password);
-       
+        admin = Admin(
+          email: email,
+          FirstName: firstName,
+          Surname: surname,
+          password: password,
+        );
+
         Navigator.pushAndRemoveUntil(
           context,
           RouteManager.adminHome as Route<Object?>,
@@ -146,7 +158,7 @@ class _LoginState extends State<Login> {
 
               obscureText: true,
               validator: (value) {
-                if (value == null || value.isEmpty|| value.length < 8) {
+                if (value == null || value.isEmpty || value.length < 8) {
                   return 'Please enter your password (at least 8 characters)';
                 }
                 return null;
