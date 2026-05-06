@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-import 'package:student_assistant/view_models/student_view_model.dart'; // Updated import
+import 'package:student_assistant/viewmodels/student_view_model.dart'; // Updated import
 
 class ApplicationFormScreen extends StatefulWidget {
   const ApplicationFormScreen({super.key});

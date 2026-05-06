@@ -1,21 +1,21 @@
 class StudentModel {
-  String? id;
-  String studentId;
-  int yearOfStudy;
-  String module1;
+  String? studentEmail;
+  String? FirstName;
+  String? Surname;
+  String? module1;
   String? module2;
   String? supportingDocumentUrl;
-  bool eligibilityConfirmed;
-  DateTime submissionDate;
+  String? Status;
+  DateTime? submissionDate;
 
   StudentModel({
-    this.id,
-    required this.studentId,
-    required this.yearOfStudy,
-    required this.module1,
+    this.studentEmail,
+    this.FirstName,
+    this.Surname,
+    this.module1,
     this.module2,
     this.supportingDocumentUrl,
-    required this.eligibilityConfirmed,
-    required this.submissionDate,
+    this.Status,
+    this.submissionDate,
   });
 }

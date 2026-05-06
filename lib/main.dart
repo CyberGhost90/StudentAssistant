@@ -15,7 +15,7 @@ Future<void> main() async {
   } catch (e) {
     // Handle initialization errors if necessary
     print('Error initializing Supabase: $e');
-    git 
+  
   }
 }
 
