@@ -37,6 +37,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Card(
+                    color: Colors.blue.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     margin: const EdgeInsets.only(bottom: 16.0),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -73,6 +77,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                   ),
 
                   Card(
+                    color: Colors.blue.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     margin: const EdgeInsets.only(bottom: 16.0),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -109,6 +117,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                   ),
 
                   Card(
+                    color: Colors.blue.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     margin: const EdgeInsets.only(bottom: 16.0),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -139,6 +151,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                   ),
 
                   Card(
+                    color: Colors.blue.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     margin: const EdgeInsets.only(bottom: 16.0),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),

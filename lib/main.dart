@@ -34,8 +34,21 @@ class MainApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Student Assistant',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
+          primarySwatch: Colors.indigo,
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.grey[100],
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 34, 241, 110),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
         ),
         initialRoute: RouteManager.splash,
         onGenerateRoute: RouteManager.generateRoute,
