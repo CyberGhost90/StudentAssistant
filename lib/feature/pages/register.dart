@@ -4,23 +4,23 @@ import 'package:student_assistant/models/admin_model.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:student_assistant/routes/routemanager.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class Register extends StatefulWidget {
+  const Register({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<Register> createState() => _RegisterState();
 }
 
-class _LoginState extends State<Login> {
+class _RegisterState extends State<Register> {
   //auth service
   final AuthService _authService = AuthService();
   //form key
   final _formKey = GlobalKey<FormState>();
-  Admin admin = Admin(FirstName: '', Surname: '', email: '', password: '');
+  Admin admin = Admin(firstName: '', surname: '', email: '', password: '');
   Student student = Student(
     studentEmail: '',
     firstName: '',
-    Surname: '',
+    surname: '',
     password: '',
   );
 
@@ -47,7 +47,7 @@ class _LoginState extends State<Login> {
         student = Student(
           studentEmail: email,
           firstName: firstName,
-          Surname: surname,
+          surname: surname,
           password: password,
         );
 
@@ -59,8 +59,8 @@ class _LoginState extends State<Login> {
       } else if (email.contains('@cut.ac.za')) {
         admin = Admin(
           email: email,
-          FirstName: firstName,
-          Surname: surname,
+          firstName: firstName,
+          surname: surname,
           password: password,
         );
 

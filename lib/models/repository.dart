@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:student_assistant/models/admin_model.dart';
 import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
@@ -24,15 +23,15 @@ class Repository {
             studentEmail: e['studentEmail'],
             password: e['password'],
             firstName: e['FirstName'],
-            Surname: e['Surname'],
+            surname: e['Surname'],
           ),
         );
       } else {
-        Exceptionerror.SnackBarError;
+        Exceptionerror.snackBarError('No students found.');
         return [];
       }
     } catch (e) {
-      Exceptionerror.SnackBarError;
+      Exceptionerror.snackBarError('Error occurred while fetching students.');
       return [];
     }
   }
@@ -51,11 +50,11 @@ class Repository {
           password: response['password'],
         );
       } else {
-        Exceptionerror.SnackBarError;
+        Exceptionerror.snackBarError('Admin not found.');
       }
       return admin;
     } catch (e) {
-      Exceptionerror.SnackBarError;
+      Exceptionerror.snackBarError('Error occurred while fetching admin.');
       return admin;
     }
   }
@@ -76,11 +75,11 @@ class Repository {
           password: response['password'],
         ); // Assuming a cast method
       } else {
-        Exceptionerror.SnackBarError;
+        Exceptionerror.snackBarError('Student not found.');
       }
       return student;
     } catch (e) {
-      Exceptionerror.SnackBarError;
+      Exceptionerror.snackBarError('Error occurred while fetching student.');
       return student;
     }
   }
@@ -91,14 +90,14 @@ class Repository {
       admin = await adminClient.insert({
         'AdminEmail': admin.email,
         'password': admin.password,
-        'FirstName': admin.FirstName,
-        'Surname': admin.Surname,
+        'FirstName': admin.firstName,
+        'Surname': admin.surname,
       });
       // Update the local admin variable after successful insertion
       _admin = admin;
       return admin;
     } catch (e) {
-      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      Exceptionerror.alertDialogError(e.toString());
       return admin; // Return the original admin object in case of an error
     }
   }
@@ -109,13 +108,13 @@ class Repository {
         'studentEmail': student.studentEmail,
         'password': student.password,
         'FirstName': student.firstName,
-        'Surname': student.Surname,
+        'Surname': student.surname,
       });
       // Update the local student variable after successful insertion
       _student = student;
       return student;
     } catch (e) {
-      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      Exceptionerror.alertDialogError(e.toString());
       return student; // Return the original student object in case of an error
     }
   }
@@ -127,12 +126,12 @@ class Repository {
           .update({
             'AdminEmail': admin.email,
             'password': admin.password,
-            'FirstName': admin.FirstName,
-            'Surname': admin.Surname,
+            'FirstName': admin.firstName,
+            'Surname': admin.surname,
           })
           .eq('AdminEmail', admin.email.toString());
     } catch (e) {
-      Exceptionerror.SnackBarError;
+      Exceptionerror.snackBarError('Error occurred while updating admin.');
     }
   }
 
@@ -143,11 +142,11 @@ class Repository {
             'studentEmail': student.studentEmail,
             'password': student.password,
             'FirstName': student.firstName,
-            'Surname': student.Surname,
+            'Surname': student.surname,
           })
           .eq('studentEmail', student.studentEmail.toString());
     } catch (e) {
-      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      Exceptionerror.alertDialogError(e.toString());
     }
   }
 
@@ -156,7 +155,7 @@ class Repository {
     try {
       await adminClient.delete().eq('AdminEmail', admin.email.toString());
     } catch (e) {
-      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      Exceptionerror.alertDialogError(e.toString());
     }
   }
 
@@ -167,7 +166,7 @@ class Repository {
         student.studentEmail.toString(),
       );
     } catch (e) {
-      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      Exceptionerror.alertDialogError(e.toString());
     }
   }
 }

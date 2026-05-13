@@ -1,7 +1,7 @@
 class Student {
   String? studentEmail;
   String? firstName;
-  String? Surname;
+  String? surname;
   String? password;
   String? module1;
   String? module2;
@@ -12,7 +12,7 @@ class Student {
   Student({
     this.studentEmail,
     this.firstName,
-    this.Surname,
+    this.surname,
     this.password,
     this.module1,
     this.module2,

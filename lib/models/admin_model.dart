@@ -1,9 +1,9 @@
 class Admin {
   String? email;
-  String? FirstName;
-  String? Surname;
+  String? firstName;
+  String? surname;
   String? password;
-  String? Status;
+  String? status;
 
-  Admin({this.email, this.FirstName, this.Surname, this.password, this.Status});
+  Admin({this.email, this.firstName, this.surname, this.password, this.status});
 }

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/routes/routemanager.dart';
 import 'package:student_assistant/viewmodels/student_view_model.dart';
-import 'package:student_assistant/viewmodels/admin_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await Supabase.initialize(
-    url: 'https://wjcpciamdrfxxnfbvbpg.supabase.co',
-    anonKey: 'sb_publishable_iVYsr0v8swgI2HD0vER2JQ_QVkXeq5E',
-  );
-
-  runApp(const MainApp());
+  try {
+    await Supabase.initialize(
+      url: 'https://wjcpciamdrfxxnfbvbpg.supabase.co',
+      anonKey: 'sb_publishable_iVYsr0v8swgI2HD0vER2JQ_QVkXeq5E',
+    );
+    runApp(const MainApp());
+  } catch (e) {
+    // Handle initialization errors
+    Exceptionerror.alertDialogError(e.toString());
+  }
 }
 
 class MainApp extends StatelessWidget {
@@ -26,9 +28,9 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => StudentViewModel(Supabase.instance.client),
         ),
-        ChangeNotifierProvider(
-          create: (_) => AdminViewModel(Supabase.instance.client),
-        ),
+        //ChangeNotifierProvider(
+        // create: (_) => AdminViewModel(Supabase.instance.client),this model is not instantiated
+        // ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -50,7 +52,7 @@ class MainApp extends StatelessWidget {
             ),
           ),
         ),
-        initialRoute: RouteManager.splash,
+        initialRoute: RouteManager.authGate,
         onGenerateRoute: RouteManager.generateRoute,
       ),
     );

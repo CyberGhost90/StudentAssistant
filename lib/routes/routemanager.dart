@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:student_assistant/feature/auth/auth_gate.dart';
 import 'package:student_assistant/feature/pages/login.dart';
 import 'package:student_assistant/feature/pages/register.dart';
-import 'package:student_assistant/viewmodels/student_view_model.dart';
 import 'package:student_assistant/views/studView.dart';
 import 'package:student_assistant/views/application_form_screen.dart';
 import 'package:student_assistant/views/application_detail_screen.dart';
@@ -10,7 +9,7 @@ import 'package:student_assistant/views/adminView.dart';
 import 'package:student_assistant/models/application_model.dart';
 
 class RouteManager {
-  static const String splash = '/';
+  static const String authGate = '/';
   static const String login = '/login';
   static const String register = '/register';
   static const String studHome = '/studHome';
@@ -21,7 +20,7 @@ class RouteManager {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case splash:
+      case authGate:
         return MaterialPageRoute(builder: (_) => const AuthGate());
 
       case login:
@@ -46,10 +45,10 @@ class RouteManager {
         );
 
       case editApplication:
-        final app = settings.arguments as ApplicationModel;
-        return MaterialPageRoute(
-          builder: (_) => ApplicationFormScreen(applicationToEdit: app),
-        );
+      //final app = settings.arguments as ApplicationModel;
+      //return MaterialPageRoute(
+      // builder: (_) => ApplicationFormScreen(applicationToEdit: app),this is not yet implemented
+      //);
 
       default:
         return MaterialPageRoute(
