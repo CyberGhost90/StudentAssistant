@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:student_assistant/feature/auth/auth_gate.dart';
 import 'package:student_assistant/feature/pages/login.dart';
 import 'package:student_assistant/feature/pages/register.dart';
+//import 'package:student_assistant/models/admin_model.dart';
 import 'package:student_assistant/views/studView.dart';
 import 'package:student_assistant/views/application_form_screen.dart';
 import 'package:student_assistant/views/application_detail_screen.dart';
@@ -33,7 +34,7 @@ class RouteManager {
         return MaterialPageRoute(builder: (_) => const StudentHomeScreen());
 
       case adminHome:
-        return MaterialPageRoute(builder: (_) => const AdminHomePage());
+        return MaterialPageRoute(builder: (_) => const AdminView());
 
       case applicationForm:
         return MaterialPageRoute(builder: (_) => const ApplicationFormScreen());
