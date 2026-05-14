@@ -8,6 +8,7 @@ class StudentViewModel extends ChangeNotifier {
   StudentViewModel(this._supabaseClient);
 
   // Form fields
+  String? firstName;
   int? _yearOfStudy;
   String? _module1;
   String? _module2;
@@ -17,6 +18,7 @@ class StudentViewModel extends ChangeNotifier {
   String? _errorMessage;
 
   // Getters for form fields
+  String? get getFirstName => firstName;
   int? get yearOfStudy => _yearOfStudy;
   String? get module1 => _module1;
   String? get module2 => _module2;
