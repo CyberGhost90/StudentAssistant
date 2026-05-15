@@ -8,6 +8,7 @@ class Student {
   String? supportingDocumentUrl;
   String? status;
   DateTime? submissionDate;
+  int? yearOfStudy;
 
   Student({
     this.studentEmail,
@@ -19,5 +20,35 @@ class Student {
     this.supportingDocumentUrl,
     this.status,
     this.submissionDate,
+    this.yearOfStudy,
   });
+  // Convert to JSON for Supabase insert
+  Map<String, dynamic> toJson() {
+    return {
+      'studentEmail': studentEmail,
+      'firstName': firstName,
+      'surname': surname,
+      'password': password,
+      'module1': module1,
+      'module2': module2,
+      'supportingDocumentUrl': supportingDocumentUrl,
+      'submission_date': submissionDate?.toIso8601String(),
+      'yearOfStudy': yearOfStudy,
+    };
+  }
+
+  // Factory to create from Supabase response
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      studentEmail: json['studentEmail'],
+      firstName: json['firstName'],
+      surname: json['surname'],
+      password: json['password'],
+      module1: json['module1'],
+      module2: json['module2'],
+      supportingDocumentUrl: json['supportingDocumentUrl'],
+      submissionDate: DateTime.parse(json['submission_date']),
+      yearOfStudy: json['yearOfStudy'], // Assuming this field exists
+    );
+  }
 }

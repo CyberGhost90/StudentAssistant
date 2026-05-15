@@ -24,6 +24,7 @@ class Repository {
             password: e['password'],
             firstName: e['FirstName'],
             surname: e['Surname'],
+            yearOfStudy: e['yearOfStudy'],
           ),
         );
       } else {
@@ -73,6 +74,9 @@ class Repository {
         _student = Student(
           studentEmail: response['studentEmail'],
           password: response['password'],
+          firstName: response['FirstName'],
+          surname: response['Surname'],
+          yearOfStudy: response['yearOfStudy'], // Assuming this field exists
         ); // Assuming a cast method
       } else {
         Exceptionerror.snackBarError('Student not found.');

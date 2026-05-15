@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/application_model.dart';
 import '../routes/routemanager.dart';
@@ -7,27 +8,27 @@ import '../feature/auth/auth_service.dart';
 
 class StudentViewModel extends ChangeNotifier {
   final SupabaseClient _supabaseClient;
-  final AuthService _authService= AuthService();
+  final AuthService _authService = AuthService();
 
-  StudentViewModel(this._supabaseClient){
+  StudentViewModel(this._supabaseClient) {
     loadStudentData();
   }
 
   //Profile state
-  String firstName='';
+  String firstName = '';
 
   //Application list(for HomeScreen READ)
-  List<ApplicationModel> _applications=[];
+  List<ApplicationModel> _applications = [];
   List<ApplicationModel> get applications => _applications;
 
   //Available Modules(displayed on HomeScreen)
-  final List<Map<String,String>> modules=[
-    {'level': 'IT 1st Year', 'name' : 'IT 1st Year Modules'},
-    {'level': 'IT 2nd Year', 'name' : 'IT 2nd Year Modules'},
-    {'level': 'Computer Literacy', 'name' : 'Computer Literacy Modules'},
-    {'level': 'ECP', 'name' : 'IT Extended Programme (ECP)'},
-    {'level': 'Higher Certificate', 'name' : 'Higher Certificate in IT'},
-    {'level': 'Open Lab', 'name' : 'Open Lab'},
+  final List<Map<String, String>> modules = [
+    {'level': 'IT 1st Year', 'name': 'IT 1st Year Modules'},
+    {'level': 'IT 2nd Year', 'name': 'IT 2nd Year Modules'},
+    {'level': 'Computer Literacy', 'name': 'Computer Literacy Modules'},
+    {'level': 'ECP', 'name': 'IT Extended Programme (ECP)'},
+    {'level': 'Higher Certificate', 'name': 'Higher Certificate in IT'},
+    {'level': 'Open Lab', 'name': 'Open Lab'},
   ];
 
   // Form fields
@@ -99,35 +100,40 @@ class StudentViewModel extends ChangeNotifier {
   }
 
   //Load student profile + applications
-  Future<void> loadStudentData() async
-  {
-    _isLoading=true;
-    _errorMessage=null;
+  Future<void> loadStudentData() async {
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    try{
-      final userId= _supabaseClient.auth.currentUser?.id;
-      final email= _supabaseClient.auth.currentUser?.email ?? '';
+    try {
+      final userId = _supabaseClient.auth.currentUser?.id;
+      final email = _supabaseClient.auth.currentUser?.email ?? '';
 
       //Derive first name from email(before the @) as a simple display name until you have profiles table
-      if(email.isNotEmpty)
-      {
-        final namePart=email.split('@').first.split('.').first;
-        firstName=namePart.isNotEmpty? '${namePart[0].toUpperCase()}${namePart.substring(1)}': 'Student';
+      if (email.isNotEmpty) {
+        final namePart = email.split('@').first.split('.').first;
+        firstName = namePart.isNotEmpty
+            ? '${namePart[0].toUpperCase()}${namePart.substring(1)}'
+            : 'Student';
       }
-      if(userId!=null)
-      {
-        final response =await _supabaseClient.from('student_applications').select().eq('student_id', userId).order('submission_date',ascending: false);
-        _applications=(response as List).map((e)=>ApplicationModel.fromJson(e)).toList();
+      if (userId != null) {
+        final response = await _supabaseClient
+            .from('student_applications')
+            .select()
+            .eq('student_id', userId)
+            .order('submission_date', ascending: false);
+        _applications = (response as List)
+            .map((e) => ApplicationModel.fromJson(e))
+            .toList();
       }
-    }on PostgrestException catch (e){
-        _errorMessage='Failed to load data: ${e.message}';
-      }catch (e){
-        _errorMessage='An unexpected error occurred: $e';
-      }finally{
-        _isLoading=false;
-        notifyListeners();
-      }
+    } on PostgrestException catch (e) {
+      _errorMessage = 'Failed to load data: ${e.message}';
+    } catch (e) {
+      _errorMessage = 'An unexpected error occurred: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // Method to handle document upload to Supabase Storage
@@ -135,13 +141,20 @@ class StudentViewModel extends ChangeNotifier {
     if (_supportingDocument == null) return null;
 
     try {
-      final userId= _supabaseClient.auth.currentUser!.id;
-      final fileName='${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final userId = _supabaseClient.auth.currentUser!.id;
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.pdf';
 
-      await _supabaseClient.storage.from('supporting_documents').upload('$userId/$fileName',_supportingDocument!,fileOptions: const FileOptions(upsert: true));
+      await _supabaseClient.storage
+          .from('supporting_documents')
+          .upload(
+            '$userId/$fileName',
+            _supportingDocument!,
+            fileOptions: const FileOptions(upsert: true),
+          );
 
-      return _supabaseClient.storage.from('supporting_documents').getPublicUrl('$userId/$fileName');
-
+      return _supabaseClient.storage
+          .from('supporting_documents')
+          .getPublicUrl('$userId/$fileName');
     } on StorageException catch (e) {
       _errorMessage = 'Document upload failed: ${e.message}';
       notifyListeners();
@@ -153,7 +166,6 @@ class StudentViewModel extends ChangeNotifier {
     }
   }
 
-  // Method to submit the application
   Future<bool> submitApplication() async {
     _isLoading = true;
     _errorMessage = null;
@@ -161,7 +173,8 @@ class StudentViewModel extends ChangeNotifier {
 
     // Basic validation before submission
     if (_yearOfStudy == null || _module1 == null || !_eligibilityConfirmed) {
-      _errorMessage ='Please fill in all required fields and confirm eligibility.';
+      _errorMessage =
+          'Please fill in all required fields and confirm eligibility.';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -177,8 +190,11 @@ class StudentViewModel extends ChangeNotifier {
       }
 
       // Check if the user has already submitted an application
-      //this will give an error,check columns and database before - KING
-      final existingApplications = await _supabaseClient.from('student_applications').select('id').eq('student_id', userId).limit(1);
+      final existingApplications = await _supabaseClient
+          .from('student_applications')
+          .select('id')
+          .eq('student_id', userId)
+          .limit(1);
 
       if (existingApplications.isNotEmpty) {
         _errorMessage = 'You have already submitted an application.';
@@ -194,19 +210,23 @@ class StudentViewModel extends ChangeNotifier {
         return false; // Upload failed
       }
 
-      final applicationData = {
-        'student_id': userId,
-        'year_of_study': _yearOfStudy,
-        'module_1': _module1,
-        'module_2': _module2,
-        'supporting_document_url': documentUrl,
-        'eligibility_confirmed': _eligibilityConfirmed,
-        'submission_date': DateTime.now().toIso8601String(),
-        'status': 'pending'
-      };
+      // Use StudentModel instead of raw Map
+      final application = Student(
+        studentEmail: _supabaseClient.auth.currentUser?.email,
+        firstName: firstName,
+        module1: _module1,
+        module2: _module2,
+        supportingDocumentUrl: documentUrl,
+        submissionDate: DateTime.now(),
+        yearOfStudy: _yearOfStudy!,
+      );
 
-      await _supabaseClient.from('student_applications').insert(applicationData);
-      await loadStudentData();
+      await _supabaseClient
+          .from('student_applications')
+          .insert(application.toJson());
+
+      _isLoading = false;
+      notifyListeners();
       return true;
     } on PostgrestException catch (e) {
       _errorMessage = 'Submission failed: ${e.message}';
