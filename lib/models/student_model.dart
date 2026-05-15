@@ -51,4 +51,31 @@ class Student {
       yearOfStudy: json['yearOfStudy'], // Assuming this field exists
     );
   }
+
+  Student copyWith({
+    String? studentEmail,
+    String? firstName,
+    String? surname,
+    String? password,
+    String? module1,
+    String? module2,
+    String? supportingDocumentUrl,
+    String? status,
+    DateTime? submissionDate,
+    int? yearOfStudy,
+  }) {
+    return Student(
+      studentEmail: studentEmail ?? this.studentEmail,
+      firstName: firstName ?? this.firstName,
+      surname: surname ?? this.surname,
+      password: password ?? this.password,
+      module1: module1 ?? this.module1,
+      module2: module2 ?? this.module2,
+      supportingDocumentUrl:
+          supportingDocumentUrl ?? this.supportingDocumentUrl,
+      status: status ?? this.status,
+      submissionDate: submissionDate ?? this.submissionDate,
+      yearOfStudy: yearOfStudy ?? this.yearOfStudy,
+    );
+  }
 }
