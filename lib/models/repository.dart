@@ -14,6 +14,8 @@ class Repository {
   Admin? get admin => _admin;
   Student? get student => _student;
 
+  //READ
+  //returns all students
   Future<Iterable<Student>> getStudents() async {
     try {
       final response = await studentClient.select();
@@ -24,6 +26,7 @@ class Repository {
             password: e['password'],
             firstName: e['FirstName'],
             surname: e['Surname'],
+            yearOfStudy: e['yearOfStudy'],
           ),
         );
       } else {
@@ -37,6 +40,7 @@ class Repository {
   }
 
   //READ
+  //returns 1 admin
   Future<Admin> getAdmin(Admin admin) async {
     try {
       final response = await adminClient
@@ -59,6 +63,7 @@ class Repository {
     }
   }
 
+  //returns 1 student
   Future<Student> getStudent(Student student) async {
     try {
       final response = await studentClient
@@ -73,6 +78,9 @@ class Repository {
         _student = Student(
           studentEmail: response['studentEmail'],
           password: response['password'],
+          firstName: response['FirstName'],
+          surname: response['Surname'],
+          yearOfStudy: response['yearOfStudy'], // Assuming this field exists
         ); // Assuming a cast method
       } else {
         Exceptionerror.snackBarError('Student not found.');
