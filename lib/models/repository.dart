@@ -14,6 +14,8 @@ class Repository {
   Admin? get admin => _admin;
   Student? get student => _student;
 
+  //READ
+  //returns all students
   Future<Iterable<Student>> getStudents() async {
     try {
       final response = await studentClient.select();
@@ -38,6 +40,7 @@ class Repository {
   }
 
   //READ
+  //returns 1 admin
   Future<Admin> getAdmin(Admin admin) async {
     try {
       final response = await adminClient
@@ -60,6 +63,7 @@ class Repository {
     }
   }
 
+  //returns 1 student
   Future<Student> getStudent(Student student) async {
     try {
       final response = await studentClient
