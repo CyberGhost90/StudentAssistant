@@ -220,4 +220,65 @@ class StudentViewModel extends ChangeNotifier {
       return false;
     }
   }
+
+  //UPDATE: Edit existing (pending) application
+  Future<bool> updateApplication(String applicationId,{int? yearOfStudy, String? module1, String? module2, bool? eligibilityConfirmed}) async
+  {
+    _isLoading =true;
+    _errorMessage=null;
+    notifyListeners();
+
+    try{
+      final documentUrl= await _uploadDocument();
+
+      final Map<String,dynamic> updates={};
+      if(yearOfStudy!=null) updates['year_of_study']=yearOfStudy;
+      if(module1!=null) updates['module_1']=module1; updates['module_2']=module2;
+      if(eligibilityConfirmed!=null)
+      {
+        updates['eligibility_confirmed']=eligibilityConfirmed;
+      }
+      if(documentUrl!=null)
+      {
+        updates['supporting_document_url']=documentUrl;
+      }
+      await _supabaseClient.from('student_applications').update(updates).eq('id',applicationId);
+      await loadStudentData();
+      return true;
+
+    }on PostgrestException catch (e){
+      _errorMessage='Update failed: ${e.message}';
+      _isLoading=false;
+      notifyListeners();
+      return false;
+    }catch (e){
+      _errorMessage='An unexpected error occurred : $e';
+      _isLoading=false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  //logout
+  Future<void> logout(BuildContext context) async
+  {
+    await _authService.signOut();
+    if(context.mounted)
+    {
+      Navigator.pushReplacementNamed(context, RouteManager.login);
+    }
+  }
+
+  //Reset form fields(call after successful submit)
+  void resetForm()
+  {
+    _yearOfStudy=null;
+    _module1=null;
+    _module2=null;
+    _supportingDocument=null;
+    _eligibilityConfirmed=false;
+    _errorMessage=null;
+    notifyListeners();
+  }
+
 }
