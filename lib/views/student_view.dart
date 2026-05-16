@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/application_model.dart';
-import '../routes/routemanager.dart';
+import '../routes/route_manager.dart';
 import 'package:student_assistant/viewmodels/student_view_model.dart';
 
 class StudentHomeScreen extends StatefulWidget {
@@ -13,20 +13,20 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
-  // void initState() {
-  //   super.initState();
-  //   // Use Future.microtask to trigger data loading after the first frame
-  //   Future.microtask(() {
-  //     if (mounted) {
-  //       context.read<StudentViewModel>().loadStudentData();
-  //     }
-  //   });
-  // }
+  void initState() {
+     super.initState();
+     // Use Future.microtask to trigger data loading after the first frame
+     Future.microtask(() {
+       if (mounted) {
+         context.read<StudentViewModel>().loadStudentData();
+       }
+     });
+  }
 
-  // // Defined properly inside the State class
-  // Future<void> refreshData() async {
-  //   await context.read<StudentViewModel>().loadStudentData();
-  // }
+  // Defined properly inside the State class
+  Future<void> refreshData() async {
+     await context.read<StudentViewModel>().loadStudentData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +99,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: const Text(
@@ -119,7 +119,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                               Text(
                                 "Manage your Student Assistant applications easily.",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 14,
                                 ),
                               ),
@@ -148,7 +148,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.indigo.withOpacity(0.1),
+                                color: Colors.indigo.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text("${sm.applications.length} Total",style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold),),
@@ -280,10 +280,10 @@ class _ApplicationCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.4)),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -295,7 +295,7 @@ class _ApplicationCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(_statusIcon(application.status), color: color),
@@ -328,7 +328,7 @@ class _ApplicationCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(

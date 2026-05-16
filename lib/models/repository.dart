@@ -1,5 +1,5 @@
 import 'package:student_assistant/models/admin_model.dart';
-import 'package:student_assistant/models/exceptionError.dart';
+import 'package:student_assistant/models/exception_error.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
