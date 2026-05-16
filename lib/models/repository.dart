@@ -38,7 +38,7 @@ class Repository {
       final response = await Supabase.instance.client.storage
           .from(bucketName!)
           .upload('$studentEmail/$pickedDocs/$ext', imageFile);
-      _student!.supportingDocumentUrl = result.path;
+      _student!.supportingDocumentUrl = response;
     } catch (e) {
       Exceptionerror.snackBarError('Error occurred while uploading documents.');
       return null;
