@@ -13,20 +13,20 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
-  // void initState() {
-  //   super.initState();
-  //   // Use Future.microtask to trigger data loading after the first frame
-  //   Future.microtask(() {
-  //     if (mounted) {
-  //       context.read<StudentViewModel>().loadStudentData();
-  //     }
-  //   });
-  // }
+  void initState() {
+    super.initState();
+    // Use Future.microtask to trigger data loading after the first frame
+    Future.microtask(() {
+      if (mounted) {
+        context.read<StudentViewModel>().loadStudentData();
+      }
+    });
+  }
 
-  // // Defined properly inside the State class
-  // Future<void> refreshData() async {
-  //   await context.read<StudentViewModel>().loadStudentData();
-  // }
+  // Defined properly inside the State class
+  Future<void> refreshData() async {
+    await context.read<StudentViewModel>().loadStudentData();
+  }
 
   @override
   Widget build(BuildContext context) {
