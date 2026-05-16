@@ -109,7 +109,6 @@ class _RegisterLoginState extends State<Register> {
                     prefixIcon: Icon(Icons.person_outline),
                     hintText: 'Enter your surname',
                   ),
-                  obscureText: true,
                   validator: (value) {
                   if (value == null || value.isEmpty) 
                   {

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:student_assistant/models/admin_model.dart';
 import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
@@ -10,9 +13,71 @@ class Repository {
   Student? _student;
   final adminClient = Supabase.instance.client.from('admin');
   final studentClient = Supabase.instance.client.from('student');
+  final String? bucketName = 'student-bucket';
   //getters
   Admin? get admin => _admin;
   Student? get student => _student;
+
+  //calling the file picker
+  Future<File?> pickStudentDocs() async {
+    FilePickerResult? result = await FilePicker.pickFiles();
+    if (result != null) {
+      _student!.supportingDocumentUrl = result.files.single.path!;
+      return File(result.files.single.path!);
+    }
+    return null;
+  }
+
+  //upload a student documents to the bucket
+  Future<File?> uploadStudentDocs(String studentEmail, File imageFile) async {
+    final pickedDocs = DateTime.now().millisecondsSinceEpoch.toString();
+    File? result = await pickStudentDocs();
+    final ext = result!.path.split('.').last;
+
+    try {
+      final response = await Supabase.instance.client.storage
+          .from(bucketName!)
+          .upload('$studentEmail/$pickedDocs/$ext', imageFile);
+      _student!.supportingDocumentUrl = result.path;
+    } catch (e) {
+      Exceptionerror.snackBarError('Error occurred while uploading documents.');
+      return null;
+    }
+    return null;
+  }
+
+  //Delete stduent docs from the bucket
+  Future<void> deleteStudentDocs(String studentEmail) async {
+    try {
+      await Supabase.instance.client.storage.from(bucketName!).remove([
+        _student!.supportingDocumentUrl!,
+      ]);
+    } catch (e) {
+      Exceptionerror.alertDialogError(
+        'Error occurred while deleting documents.',
+      );
+    }
+  }
+
+  //update the student documents in the bucket
+  Future<void> updateStudentDocs(String studentEmail) async {
+    try {
+      File? newDocs = await pickStudentDocs();
+      if (newDocs != null) {
+        await Supabase.instance.client.storage
+            .from(bucketName!)
+            .update(
+              '$studentEmail/${_student!.supportingDocumentUrl!.split('/').last}',
+              newDocs,
+            );
+        _student!.supportingDocumentUrl = newDocs.path;
+      }
+    } catch (e) {
+      Exceptionerror.snackBarError(
+        'Error occurred while updating document URL.',
+      );
+    }
+  }
 
   //READ
   //returns all students
