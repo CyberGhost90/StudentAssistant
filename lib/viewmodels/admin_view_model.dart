@@ -30,15 +30,11 @@ class AdminViewModel extends ChangeNotifier {
 
   // Convenience counts for the dashboard
   int get totalCount => _applications.length;
-  int get pendingCount =>
-      _applications.where((a) => a.status == 'pending').length;
-  int get approvedCount =>
-      _applications.where((a) => a.status == 'approved').length;
-  int get rejectedCount =>
-      _applications.where((a) => a.status == 'rejected').length;
+  int get pendingCount => _applications.where((a) => a.status == 'pending').length;
+  int get approvedCount => _applications.where((a) => a.status == 'approved').length;
+  int get rejectedCount => _applications.where((a) => a.status == 'rejected').length;
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
-
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -65,12 +61,7 @@ class AdminViewModel extends ChangeNotifier {
  
   /// [_filteredApplications].
   void _applyFilter() {
-    if (_statusFilter == 'all') {
-      _filteredApplications = List.from(_applications);
-    } else {
-      _filteredApplications =
-          _applications.where((a) => a.status == _statusFilter).toList();
-    }
+    _filteredApplications = _statusFilter =='all'? List.from(_applications) : _applications.where((a)=>a.status == _statusFilter).toList();
     notifyListeners();
   }
 
@@ -78,7 +69,7 @@ class AdminViewModel extends ChangeNotifier {
 
   /// Change the active status filter and refresh the visible list.
   void setStatusFilter(String filter) {
-    _statusFilter = filter;
+    _statusFilter = filter.toLowerCase();
     _applyFilter();
   }
 

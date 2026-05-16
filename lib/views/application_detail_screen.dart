@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:student_assistant/models/application_model.dart';
-import 'package:student_assistant/routes/routemanager.dart';
+import 'package:student_assistant/routes/route_manager.dart';
 
 class ApplicationDetailScreen extends StatefulWidget {
   final ApplicationModel application;
@@ -140,7 +140,7 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
           children: [
             // ── Status Banner ──────────────────────────────────────
             Card(
-              color: _statusColor(app.status).withOpacity(0.12),
+              color: _statusColor(app.status).withValues(alpha: 0.12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(color: _statusColor(app.status), width: 1.5),
