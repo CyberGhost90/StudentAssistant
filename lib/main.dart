@@ -4,6 +4,7 @@ import 'package:student_assistant/viewmodels/admin_view_model.dart';
 import 'package:student_assistant/viewmodels/student_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:student_assistant/models/repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,7 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => StudentViewModel(Supabase.instance.client),
+          create: (_) => StudentViewModel(Repository()),
         ),
         ChangeNotifierProvider(
          create: (_) => AdminViewModel(Supabase.instance.client),
