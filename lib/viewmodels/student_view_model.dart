@@ -4,12 +4,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/application_model.dart';
 import '../routes/route_manager.dart';
 import '../feature/auth/auth_service.dart';
+import '../models/repository.dart';
 
 class StudentViewModel extends ChangeNotifier {
-  final SupabaseClient _supabaseClient;
+  final Repository _repository;
   final AuthService _authService = AuthService();
 
-  StudentViewModel(this._supabaseClient) {
+  StudentViewModel(this._repository) {
     loadStudentData();
   }
 
@@ -105,8 +106,9 @@ class StudentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final userId = _supabaseClient.auth.currentUser?.id;
-      final email = _supabaseClient.auth.currentUser?.email ?? '';
+      final user=Supabase.instance.client.auth.currentUser;
+      final userId = user?.id;
+      final email = user?.email ?? '';
 
       //Derive first name from email(before the @) as a simple display name until you have profiles table
       if (email.isNotEmpty) {
@@ -116,14 +118,7 @@ class StudentViewModel extends ChangeNotifier {
             : 'Student';
       }
       if (userId != null) {
-        final response = await _supabaseClient
-            .from('student_applications')
-            .select()
-            .eq('student_id', userId)
-            .order('submission_date', ascending: false);
-        _applications = (response as List)
-            .map((e) => ApplicationModel.fromJson(e))
-            .toList();
+        _applications = await _repository.getApplicationForStudent(userId);
       }
     } on PostgrestException catch (e) {
       _errorMessage = 'Failed to load data: ${e.message}';
@@ -180,7 +175,7 @@ class StudentViewModel extends ChangeNotifier {
     }
 
     try {
-      final userId = _supabaseClient.auth.currentUser?.id;
+      final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
         _errorMessage = 'User not authenticated.';
         _isLoading = false;
