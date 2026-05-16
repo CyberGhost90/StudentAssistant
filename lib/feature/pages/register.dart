@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:student_assistant/feature/auth/auth_service.dart';
-import 'package:student_assistant/routes/routemanager.dart';
+import 'package:student_assistant/routes/route_manager.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -42,7 +42,7 @@ class _RegisterLoginState extends State<Register> {
     final String password = _passwordController.text;
 
     try {
-      await _authService.signInWithEmailPassword(email, password);
+      await _authService.registerWithEmail(email, password);
 
       if(!mounted) return;
 
@@ -109,7 +109,6 @@ class _RegisterLoginState extends State<Register> {
                     prefixIcon: Icon(Icons.person_outline),
                     hintText: 'Enter your surname',
                   ),
-                  obscureText: true,
                   validator: (value) {
                   if (value == null || value.isEmpty) 
                   {

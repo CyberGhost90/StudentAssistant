@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:student_assistant/routes/routemanager.dart';
+import 'package:student_assistant/routes/route_manager.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthGate extends StatelessWidget {

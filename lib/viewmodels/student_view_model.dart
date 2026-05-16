@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/application_model.dart';
-import '../routes/routemanager.dart';
+import '../routes/route_manager.dart';
 import '../feature/auth/auth_service.dart';
 
 class StudentViewModel extends ChangeNotifier {
@@ -210,23 +209,18 @@ class StudentViewModel extends ChangeNotifier {
         return false; // Upload failed
       }
 
-      // Use StudentModel instead of raw Map
-      final application = Student(
-        studentEmail: _supabaseClient.auth.currentUser?.email,
-        firstName: firstName,
-        module1: _module1,
-        module2: _module2,
-        supportingDocumentUrl: documentUrl,
-        submissionDate: DateTime.now(),
-        yearOfStudy: _yearOfStudy!,
-      );
+      await _supabaseClient.from('student_applications').insert({
+        'student_id': userId,
+        'year_of_study' :yearOfStudy,
+        'module_1': _module1,
+        'module_2' :module2,
+        'supporting_document_url': documentUrl,
+        'eligibility_confirmed' : _eligibilityConfirmed,
+        'submission_date': DateTime.now().toIso8601String(),
+        'status': 'pending'
+      });
 
-      await _supabaseClient
-          .from('student_applications')
-          .insert(application.toJson());
-
-      _isLoading = false;
-      notifyListeners();
+      await loadStudentData();
       return true;
     } on PostgrestException catch (e) {
       _errorMessage = 'Submission failed: ${e.message}';
@@ -253,7 +247,9 @@ class StudentViewModel extends ChangeNotifier {
 
       final Map<String,dynamic> updates={};
       if(yearOfStudy!=null) updates['year_of_study']=yearOfStudy;
-      if(module1!=null) updates['module_1']=module1; updates['module_2']=module2;
+      if(module1!=null) updates['module_1']=module1; 
+      updates['module_2']=module2;
+      
       if(eligibilityConfirmed!=null)
       {
         updates['eligibility_confirmed']=eligibilityConfirmed;

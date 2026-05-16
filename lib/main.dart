@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:student_assistant/models/exceptionError.dart';
-import 'package:student_assistant/routes/routemanager.dart';
+import 'package:student_assistant/routes/route_manager.dart';
+import 'package:student_assistant/viewmodels/admin_view_model.dart';
 import 'package:student_assistant/viewmodels/student_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 
 Future<void> main() async {
-  try {
-    await Supabase.initialize(
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
       url: 'https://wjcpciamdrfxxnfbvbpg.supabase.co',
       anonKey: 'sb_publishable_iVYsr0v8swgI2HD0vER2JQ_QVkXeq5E',
     );
-    runApp(const MainApp());
-  } catch (e) {
-    // Handle initialization errors
-    Exceptionerror.alertDialogError(e.toString());
-  }
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {
@@ -28,9 +25,9 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => StudentViewModel(Supabase.instance.client),
         ),
-        //ChangeNotifierProvider(
-        // create: (_) => AdminViewModel(Supabase.instance.client),this model is not instantiated
-        // ),
+        ChangeNotifierProvider(
+         create: (_) => AdminViewModel(Supabase.instance.client),
+         ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -44,7 +41,8 @@ class MainApp extends StatelessWidget {
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 34, 241, 110),
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
