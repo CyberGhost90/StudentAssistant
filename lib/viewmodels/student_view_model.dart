@@ -98,6 +98,17 @@ class StudentViewModel extends ChangeNotifier {
     }
     return null;
   }
+  //Pre-fill form for editing
+  void loadFromApplication(ApplicationModel app)
+  {
+    _yearOfStudy=app.yearOfStudy;
+    _module1=app.module1;
+    _module2=app.module2;
+    _eligibilityConfirmed=app.eligibilityConfirmed;
+    _supportingDocument=null;
+    _errorMessage=null;
+    notifyListeners();
+  }
 
   //Load student profile + applications
   Future<void> loadStudentData() async {
@@ -130,36 +141,7 @@ class StudentViewModel extends ChangeNotifier {
     }
   }
 
-  // Method to handle document upload to Supabase Storage
-  Future<String?> _uploadDocument() async {
-    if (_supportingDocument == null) return null;
-
-    try {
-      final userId = _supabaseClient.auth.currentUser!.id;
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}.pdf';
-
-      await _supabaseClient.storage
-          .from('supporting_documents')
-          .upload(
-            '$userId/$fileName',
-            _supportingDocument!,
-            fileOptions: const FileOptions(upsert: true),
-          );
-
-      return _supabaseClient.storage
-          .from('supporting_documents')
-          .getPublicUrl('$userId/$fileName');
-    } on StorageException catch (e) {
-      _errorMessage = 'Document upload failed: ${e.message}';
-      notifyListeners();
-      return null;
-    } catch (e) {
-      _errorMessage = 'An unexpected error occurred during document upload: $e';
-      notifyListeners();
-      return null;
-    }
-  }
-
+  //Create 
   Future<bool> submitApplication() async {
     _isLoading = true;
     _errorMessage = null;
@@ -183,45 +165,38 @@ class StudentViewModel extends ChangeNotifier {
         return false;
       }
 
-      // Check if the user has already submitted an application
-      final existingApplications = await _supabaseClient
-          .from('student_applications')
-          .select('id')
-          .eq('student_id', userId)
-          .limit(1);
-
-      if (existingApplications.isNotEmpty) {
-        _errorMessage = 'You have already submitted an application.';
-        _isLoading = false;
+      //Duplicate check via Repository
+      if(await _repository.studentHasApplication(userId)){
+        _errorMessage='You have already submitted an application.';
+        _isLoading=false;
         notifyListeners();
         return false;
       }
 
-      final documentUrl = await _uploadDocument();
-      if (_supportingDocument != null && documentUrl == null) {
-        _isLoading = false;
+      //Upload document via Repository if one was picked
+      String? documentUrl;
+      if(_supportingDocument !=null)
+      {
+        documentUrl= await _repository.uploadStudentDocs(userId, _supportingDocument!);
+      }
+      if(documentUrl ==null)
+      {
+        _isLoading=false;
         notifyListeners();
-        return false; // Upload failed
+        return false;
       }
 
-      await _supabaseClient.from('student_applications').insert({
-        'student_id': userId,
-        'year_of_study' :yearOfStudy,
-        'module_1': _module1,
-        'module_2' :module2,
-        'supporting_document_url': documentUrl,
-        'eligibility_confirmed' : _eligibilityConfirmed,
-        'submission_date': DateTime.now().toIso8601String(),
-        'status': 'pending'
-      });
-
-      await loadStudentData();
-      return true;
-    } on PostgrestException catch (e) {
-      _errorMessage = 'Submission failed: ${e.message}';
-      _isLoading = false;
-      notifyListeners();
-      return false;
+      //Create via Repository
+      final success= await _repository.createApplication(studentId: userId, yearOfStudy: _yearOfStudy!, module1: _module1!, eligibilityConfirmed: eligibilityConfirmed, documentUrl: documentUrl);
+      if(success)
+      {
+        await loadStudentData();
+      }else{
+        _errorMessage='Sumission failed. Please try again.';
+        _isLoading=false;
+        notifyListeners();
+      }
+      return success;
     } catch (e) {
       _errorMessage = 'An unexpected error occurred: $e';
       _isLoading = false;
@@ -238,30 +213,26 @@ class StudentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try{
-      final documentUrl= await _uploadDocument();
+      final userId=Supabase.instance.client.auth.currentUser?.id;
 
-      final Map<String,dynamic> updates={};
-      if(yearOfStudy!=null) updates['year_of_study']=yearOfStudy;
-      if(module1!=null) updates['module_1']=module1; 
-      updates['module_2']=module2;
-      
-      if(eligibilityConfirmed!=null)
+      //uplaod new document via Repository
+      String? documentUrl;
+      if(_supportingDocument != null && userId !=null)
       {
-        updates['eligibility_confirmed']=eligibilityConfirmed;
+        documentUrl= await _repository.uploadStudentDocs(userId, _supportingDocument!); 
       }
-      if(documentUrl!=null)
-      {
-        updates['supporting_document_url']=documentUrl;
-      }
-      await _supabaseClient.from('student_applications').update(updates).eq('id',applicationId);
-      await loadStudentData();
-      return true;
 
-    }on PostgrestException catch (e){
-      _errorMessage='Update failed: ${e.message}';
-      _isLoading=false;
-      notifyListeners();
-      return false;
+      //Update via Repository
+      final success= await _repository.updateApplication(applicationId: applicationId, yearOfStudy: yearOfStudy, module1: module1, eligibilityConfirmed: eligibilityConfirmed, documentUrl: documentUrl);
+      if(success)
+      {
+        await loadStudentData();
+      }else{
+        _errorMessage='Update failed. Please try again.';
+        _isLoading=false;
+        notifyListeners();
+      }
+      return success;
     }catch (e){
       _errorMessage='An unexpected error occurred : $e';
       _isLoading=false;
@@ -291,5 +262,18 @@ class StudentViewModel extends ChangeNotifier {
     _errorMessage=null;
     notifyListeners();
   }
+
+  Future<void> pickDocument() async
+  {
+    final file=await _repository.pickStudentDocs();
+    if (file !=null)
+    {
+      _supportingDocument=file;
+      notifyListeners();
+    }
+  }
+
+  
+  
 
 }

@@ -23,7 +23,7 @@ class Repository {
   Admin? get admin => _admin;
   Student? get student => _student;
 
-  //STUDENT
+  //-------------------------STUDENT------------------------
   //Returns all students
   Future<Iterable<Student>> getStudents() async
   {
@@ -118,7 +118,7 @@ class Repository {
     }
   }
 
-  //ADMIN
+  //-------------------------ADMIN-------------------------
   //Return 1 admin
   Future<Admin> getAdmin(Admin admin) async {
     try {
@@ -185,7 +185,8 @@ class Repository {
     }
   }
 
-  //APPLICATION
+  //-------------------------APPLICATION--------------------------
+
   //Get all applications for one student (scoped by userId)
   Future<List<ApplicationModel>> getApplicationForStudent(String studentId) async
   {
@@ -232,16 +233,17 @@ class Repository {
   }
 
   //Create- submit a new application (no file storage)
-  Future<bool> createApplication({required String studentId, required int yearOfStudy, required String module1, String? module2, required bool eligibilityConfirmed}) async
+  Future<bool> createApplication({required String studentId, required int yearOfStudy, required String module1, String? module2, required bool eligibilityConfirmed, String? documentUrl}) async
   {
     try
     {
       await applicationClient.insert({
         'student_id': studentId,
-        'year_Of_Study': yearOfStudy,
+        'year_of_Study': yearOfStudy,
         'module_1': module1,
         'module_2': module2,
-        'eligibility_Confirmed': eligibilityConfirmed,
+        'eligibility_confirmed': eligibilityConfirmed,
+        'supporting_document_url' : documentUrl,
         'submission_date': DateTime.now().toIso8601String(),
         'status': 'pending'
       });
@@ -256,18 +258,17 @@ class Repository {
   }
 
   //Edit a pending application's fields
-  Future<bool> updateApplication({required String applicationId, required int yearOfStudy, required String module1, String? module2, required bool eligibilityConfirmed}) async
+  Future<bool> updateApplication({required String applicationId, required int? yearOfStudy, required String? module1, String? module2, required bool? eligibilityConfirmed, String? documentUrl}) async
   {
     try
     {
       final Map<String, dynamic> updates= {};
-      if(yearOfStudy!=null) updates['year_Of_Study'];
+      if(yearOfStudy!=null) updates['year_of_study'];
       if(module1!=null) updates['module_1'];
       updates['module_2'] = module2;
-      if(eligibilityConfirmed!=null)
-      {
-        updates['eligibility_Confirmed']=eligibilityConfirmed;
-      }
+      if(eligibilityConfirmed!=null) updates['eligibility_confirmed']=eligibilityConfirmed;
+      if(documentUrl !=null) updates['supporting_document_url'] = documentUrl;
+      
       await applicationClient.update(updates).eq('id', applicationId);
       return true;
     }on PostgrestException catch (e){
@@ -316,68 +317,61 @@ class Repository {
     }
     
   }
-  
-  final String? bucketName = 'student-bucket';
-  
 
-  //calling the file picker
+  //-------------------------DOCUMENT STORAGE--------------------------
+  final String bucketName='student-bucket';
+
+  //Pick any file type (CV, ID copy, academic record, cover letter, etc.)
   Future<File?> pickStudentDocs() async {
-    FilePickerResult? result = await FilePicker.pickFiles();
-    if (result != null) {
-      _student!.supportingDocumentUrl = result.files.single.path!;
+    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.any);
+    if (result != null && result.files.single.path != null) {
       return File(result.files.single.path!);
     }
     return null;
   }
 
-  //upload a student documents to the bucket
-  Future<File?> uploadStudentDocs(String studentEmail, File imageFile) async {
-    final pickedDocs = DateTime.now().millisecondsSinceEpoch.toString();
-    File? result = await pickStudentDocs();
-    final ext = result!.path.split('.').last;
-
+  //upload a student document- preserves original file extension
+  Future<String?> uploadStudentDocs(String studentId, File file) async {
     try {
-      final response = await Supabase.instance.client.storage
-          .from(bucketName!)
-          .upload('$studentEmail/$pickedDocs/$ext', imageFile);
-      _student!.supportingDocumentUrl = response;
-    } catch (e) {
-      Exceptionerror.snackBarError('Error occurred while uploading documents.');
+      final ext = file.path.split('.').last;
+      final fileName ='${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final path = '$studentId/$fileName';
+    
+      await Supabase.instance.client.storage.from(bucketName).upload(path,file,fileOptions: const FileOptions(upsert: true));
+      
+      //Return public URL to be stored in student_applications table
+      return Supabase.instance.client.storage.from(bucketName).getPublicUrl(path);
+    } on StorageException catch (e) {
+     Exceptionerror.snackBarError('Upload failed: ${e.message}');
+     return null;
+    }catch (e){
+       Exceptionerror.snackBarError('Error occurred while uploading documents.');
       return null;
     }
-    return null;
   }
 
-  //Delete stduent docs from the bucket
-  Future<void> deleteStudentDocs(String studentEmail) async {
+  //Delete student document from storage
+  Future<void> deleteStudentDocs(String filePath) async {
     try {
-      await Supabase.instance.client.storage.from(bucketName!).remove([
-        _student!.supportingDocumentUrl!,
-      ]);
-    } catch (e) {
-      Exceptionerror.alertDialogError(
-        'Error occurred while deleting documents.',
+      await Supabase.instance.client.storage.from(bucketName).remove([filePath]);
+    }on StorageException catch (e) {
+     Exceptionerror.snackBarError('Delete failed: ${e.message}');
+    }catch (e) {
+      Exceptionerror.alertDialogError('Error occurred while deleting documents.',
       );
     }
   }
 
-  //update the student documents in the bucket
-  Future<void> updateStudentDocs(String studentEmail) async {
+  //Replace an existing document with a new one
+  Future<String?> updateStudentDocs(String studentId, String oldPath) async {
     try {
-      File? newDocs = await pickStudentDocs();
-      if (newDocs != null) {
-        await Supabase.instance.client.storage
-            .from(bucketName!)
-            .update(
-              '$studentEmail/${_student!.supportingDocumentUrl!.split('/').last}',
-              newDocs,
-            );
-        _student!.supportingDocumentUrl = newDocs.path;
-      }
+      final newFile = await pickStudentDocs();
+      if (newFile == null) return null;
+      await deleteStudentDocs(oldPath);
+      return await uploadStudentDocs(studentId,newFile);
     } catch (e) {
-      Exceptionerror.snackBarError(
-        'Error occurred while updating document URL.',
-      );
+      Exceptionerror.snackBarError('Error occurred while updating document URL.',);
+      return null;
     }
   }
 }

@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:student_assistant/models/application_model.dart';
 import 'package:student_assistant/routes/route_manager.dart';
 import 'package:student_assistant/viewmodels/student_view_model.dart';
@@ -51,13 +49,8 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     super.initState();
     // Pre-populate fields when editing
     if (_isEditMode) {
-      final app = widget.applicationToEdit!;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final vm = context.read<StudentViewModel>();
-        vm.setYearOfStudy(app.yearOfStudy);
-        vm.setModule1(app.module1);
-        vm.setModule2(app.module2);
-        vm.setEligibilityConfirmed(app.eligibilityConfirmed);
+        context.read<StudentViewModel>().loadFromApplication(widget.applicationToEdit!);
       });
     }
   }
@@ -77,7 +70,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  //Personal Information
+                  //----------Personal Information----------
                   _SectionCard(
                     title: 'Personal Information',
                     child: DropdownButtonFormField<int>(
@@ -98,7 +91,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       validator: viewModel.validateYearOfStudy,
                     ),
                   ),
-                  //Module 1
+                  //----------Module 1----------
                   _SectionCard(
                     title: 'First Module Selection *',
                     child: DropdownButtonFormField<String>(
@@ -120,7 +113,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                           : null,
                     ),
                   ),
-                  //Module 2(optional)
+                  //----------Module 2(optional)----------
                   _SectionCard(
                     title: 'Second Module (Optional)',
                     child: ExpansionTile(
@@ -147,7 +140,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                       ],
                     ),
                   ),
-                  //Eligibility and Documentation
+                  //----------Eligibility and Documentation----------
                    _SectionCard(
                     title: 'Eligibility & Documentation',
                     child: Column(
@@ -193,20 +186,9 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 12),
-
                         OutlinedButton.icon(
-                          onPressed: () async {
-                            final result = await FilePicker.pickFiles(
-                              type: FileType.custom,
-                              allowedExtensions: ['pdf'],
-                            );
-                            if (result != null && result.files.single.path != null) {
-                              viewModel.setSupportingDocument(
-                                  File(result.files.single.path!));
-                            }
-                          },
+                          onPressed: () async { await viewModel.pickDocument();},
                           icon: const Icon(Icons.upload_file),
                           label: Text(
                             viewModel.supportingDocument != null
@@ -321,6 +303,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
 class _SectionCard extends StatelessWidget {
   final String title;
   final Widget child;
+
   const _SectionCard({required this.title, required this.child});
 
   @override
