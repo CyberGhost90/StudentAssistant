@@ -43,6 +43,7 @@ class StudentViewModel extends ChangeNotifier {
   //Status
   bool _isLoading = false;
   String? _errorMessage;
+  String? _successMessage;
 
   // Getters for form fields
   int? get yearOfStudy => _yearOfStudy;
@@ -53,6 +54,7 @@ class StudentViewModel extends ChangeNotifier {
   bool get eligibilityConfirmed => _eligibilityConfirmed;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get successMessage => _successMessage;
 
   // Setters for form fields
   void setYearOfStudy(int? year) {
@@ -110,6 +112,7 @@ class StudentViewModel extends ChangeNotifier {
     _eligibilityConfirmed = app.eligibilityConfirmed;
     _supportingDocument = null;
     _errorMessage = null;
+    _successMessage = null;
     notifyListeners();
   }
 
@@ -117,6 +120,7 @@ class StudentViewModel extends ChangeNotifier {
   Future<void> loadStudentData() async {
     _isLoading = true;
     _errorMessage = null;
+    _successMessage = null;
     notifyListeners();
 
     try {
@@ -148,6 +152,7 @@ class StudentViewModel extends ChangeNotifier {
   Future<bool> submitApplication() async {
     _isLoading = true;
     _errorMessage = null;
+    _successMessage = null;
     notifyListeners();
 
     // Basic validation before submission
@@ -179,10 +184,10 @@ class StudentViewModel extends ChangeNotifier {
       //Upload document via Repository if one was picked
       String? documentUrl;
       if (_supportingDocument != null) {
-        documentUrl = await _repository.uploadStudentDocs(
+        documentUrl = (await _repository.uploadStudentDocs(
           userId,
           _supportingDocument!,
-        );
+        ));
       }
       if (documentUrl == null) {
         _isLoading = false;
@@ -199,9 +204,10 @@ class StudentViewModel extends ChangeNotifier {
         documentUrl: documentUrl,
       );
       if (success) {
+        _successMessage = 'Application submitted successfully.';
         await loadStudentData();
       } else {
-        _errorMessage = 'Sumission failed. Please try again.';
+        _errorMessage = 'Submission failed. Please try again.';
         _isLoading = false;
         notifyListeners();
       }
@@ -232,10 +238,10 @@ class StudentViewModel extends ChangeNotifier {
       //uplaod new document via Repository
       String? documentUrl;
       if (_supportingDocument != null && userId != null) {
-        documentUrl = await _repository.uploadStudentDocs(
+        documentUrl = (await _repository.uploadStudentDocs(
           userId,
           _supportingDocument!,
-        );
+        ));
       }
 
       //Update via Repository
