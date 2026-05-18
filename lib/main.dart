@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:student_assistant/routes/route_manager.dart';
-import 'package:student_assistant/viewmodels/admin_view_model.dart';
+import 'package:student_assistant/routes/routemanager.dart';
 import 'package:student_assistant/viewmodels/student_view_model.dart';
+import 'package:student_assistant/viewmodels/admin_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:student_assistant/models/repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-      url: 'https://wjcpciamdrfxxnfbvbpg.supabase.co',
-      anonKey: 'sb_publishable_iVYsr0v8swgI2HD0vER2JQ_QVkXeq5E',
-    );
+    url: 'https://wjcpciamdrfxxnfbvbpg.supabase.co',
+    anonKey: 'sb_publishable_iVYsr0v8swgI2HD0vER2JQ_QVkXeq5E',
+  );
+
   runApp(const MainApp());
 }
 
@@ -24,34 +24,20 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => StudentViewModel(Repository()),
+          create: (_) => StudentViewModel(Supabase.instance.client),
         ),
         ChangeNotifierProvider(
-         create: (_) => AdminViewModel(Supabase.instance.client),
-         ),
+          create: (_) => AdminViewModel(Supabase.instance.client),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Student Assistant',
         theme: ThemeData(
-          primarySwatch: Colors.indigo,
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.grey[100],
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          useMaterial3: true,
         ),
-        initialRoute: RouteManager.authGate,
+        initialRoute: RouteManager.splash,
         onGenerateRoute: RouteManager.generateRoute,
       ),
     );

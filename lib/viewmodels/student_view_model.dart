@@ -1,36 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/application_model.dart';
-import '../routes/route_manager.dart';
-import '../feature/auth/auth_service.dart';
-import '../models/repository.dart';
 
 class StudentViewModel extends ChangeNotifier {
-  final Repository _repository;
-  final AuthService _authService = AuthService();
+  final SupabaseClient _supabaseClient;
 
-  StudentViewModel(this._repository) {
-    loadStudentData();
-  }
-
-  //Profile state
-  String firstName = '';
-
-  //Application list(for HomeScreen READ)
-  List<ApplicationModel> _applications = [];
-  List<ApplicationModel> get applications => _applications;
-
-  //Available Modules(displayed on HomeScreen)
-  final List<Map<String, String>> modules = [
-    {'level': 'IT 1st Year', 'name': 'IT 1st Year Modules'},
-    {'level': 'IT 2nd Year', 'name': 'IT 2nd Year Modules'},
-    {'level': 'Computer Literacy', 'name': 'Computer Literacy Modules'},
-    {'level': 'ECP', 'name': 'IT Extended Programme (ECP)'},
-    {'level': 'Higher Certificate', 'name': 'Higher Certificate in IT'},
-    {'level': 'Open Lab', 'name': 'Open Lab'},
-  ];
+  StudentViewModel(this._supabaseClient);
 
   // Form fields
   int? _yearOfStudy;
@@ -38,16 +13,12 @@ class StudentViewModel extends ChangeNotifier {
   String? _module2;
   File? _supportingDocument;
   bool _eligibilityConfirmed = false;
-  Student? student;
-
-  //Status
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
 
   // Getters for form fields
   int? get yearOfStudy => _yearOfStudy;
-  String? get studentID => student?.studentEmail;
   String? get module1 => _module1;
   String? get module2 => _module2;
   File? get supportingDocument => _supportingDocument;
@@ -104,51 +75,33 @@ class StudentViewModel extends ChangeNotifier {
     return null;
   }
 
-  //Pre-fill form for editing
-  void loadFromApplication(ApplicationModel app) {
-    _yearOfStudy = app.yearOfStudy;
-    _module1 = app.module1;
-    _module2 = app.module2;
-    _eligibilityConfirmed = app.eligibilityConfirmed;
-    _supportingDocument = null;
-    _errorMessage = null;
-    _successMessage = null;
-    notifyListeners();
-  }
-
-  //Load student profile + applications
-  Future<void> loadStudentData() async {
-    _isLoading = true;
-    _errorMessage = null;
-    _successMessage = null;
-    notifyListeners();
+  // Method to handle document upload to Supabase Storage
+  Future<String?> _uploadDocument() async {
+    if (_supportingDocument == null) return null;
 
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      final userId = user?.id;
-      final email = user?.email ?? '';
-
-      //Derive first name from email(before the @) as a simple display name until you have profiles table
-      if (email.isNotEmpty) {
-        final namePart = email.split('@').first.split('.').first;
-        firstName = namePart.isNotEmpty
-            ? '${namePart[0].toUpperCase()}${namePart.substring(1)}'
-            : 'Student';
-      }
-      if (userId != null) {
-        _applications = await _repository.getApplicationForStudent(userId);
-      }
-    } on PostgrestException catch (e) {
-      _errorMessage = 'Failed to load data: ${e.message}';
-    } catch (e) {
-      _errorMessage = 'An unexpected error occurred: $e';
-    } finally {
-      _isLoading = false;
+      final String path = await _supabaseClient.storage
+          .from('supporting_documents')
+          .upload(
+            '${_supabaseClient.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.pdf',
+            _supportingDocument!,
+            fileOptions: const FileOptions(upsert: true),
+          );
+      return _supabaseClient.storage
+          .from('supporting_documents')
+          .getPublicUrl(path);
+    } on StorageException catch (e) {
+      _errorMessage = 'Document upload failed: ${e.message}';
       notifyListeners();
+      return null;
+    } catch (e) {
+      _errorMessage = 'An unexpected error occurred during document upload: $e';
+      notifyListeners();
+      return null;
     }
   }
 
-  //Create
+  // Method to submit the application
   Future<bool> submitApplication() async {
     _isLoading = true;
     _errorMessage = null;
@@ -165,7 +118,7 @@ class StudentViewModel extends ChangeNotifier {
     }
 
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
+      final userId = _supabaseClient.auth.currentUser?.id;
       if (userId == null) {
         _errorMessage = 'User not authenticated.';
         _isLoading = false;
@@ -173,8 +126,15 @@ class StudentViewModel extends ChangeNotifier {
         return false;
       }
 
-      //Duplicate check via Repository
-      if (await _repository.studentHasApplication(userId)) {
+      // Check if the user has already submitted an application
+      //this will give an error,check columns and database before - KING
+      final existingApplications = await _supabaseClient
+          .from('student_applications')
+          .select('id')
+          .eq('student_id', userId)
+          .limit(1);
+
+      if (existingApplications.isNotEmpty) {
         _errorMessage = 'You have already submitted an application.';
         _isLoading = false;
         notifyListeners();
@@ -184,10 +144,10 @@ class StudentViewModel extends ChangeNotifier {
       //Upload document via Repository if one was picked
       String? documentUrl;
       if (_supportingDocument != null) {
-        documentUrl = (await _repository.uploadStudentDocs(
+        documentUrl = await _repository.uploadStudentDocs(
           userId,
           _supportingDocument!,
-        ));
+        );
       }
       if (documentUrl == null) {
         _isLoading = false;
@@ -204,10 +164,9 @@ class StudentViewModel extends ChangeNotifier {
         documentUrl: documentUrl,
       );
       if (success) {
-        _successMessage = 'Application submitted successfully.';
         await loadStudentData();
       } else {
-        _errorMessage = 'Submission failed. Please try again.';
+        _errorMessage = 'Sumission failed. Please try again.';
         _isLoading = false;
         notifyListeners();
       }
@@ -238,10 +197,10 @@ class StudentViewModel extends ChangeNotifier {
       //uplaod new document via Repository
       String? documentUrl;
       if (_supportingDocument != null && userId != null) {
-        documentUrl = (await _repository.uploadStudentDocs(
+        documentUrl = await _repository.uploadStudentDocs(
           userId,
           _supportingDocument!,
-        ));
+        );
       }
 
       //Update via Repository

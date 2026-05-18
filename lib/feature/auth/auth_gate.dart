@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:student_assistant/routes/route_manager.dart';
+import 'package:student_assistant/routes/routemanager.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthGate extends StatelessWidget {
@@ -21,29 +21,16 @@ class AuthGate extends StatelessWidget {
         final session = snapshot.hasData ? snapshot.data!.session : null;
 
         if (session != null) {
-          final email=session.user.email ?? '';
-          WidgetsBinding.instance.addPostFrameCallback((_){
-            if(email.contains('@stud.cut.ac.za'))
-            {
-              Navigator.pushReplacementNamed(context, RouteManager.studHome);
-            }else if (email.contains('@cut.ac.za'))
-            {
-              Navigator.pushReplacementNamed(context, RouteManager.adminHome);
-            }else{
-              Navigator.pushReplacementNamed(context, RouteManager.login);
-            }
-          }); 
-          }else{
-            WidgetsBinding.instance.addPostFrameCallback((_)
-            {
-              Navigator.pushReplacementNamed(context, RouteManager.login);
-            });
+          if (session.user.email!.contains('@stud.cut.ac.za')) {
+            return RouteManager.studHome as Widget;
+          } else if (session.user.email!.contains('@cut.ac.za')) {
+            return RouteManager.adminHome as Widget;
           }
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator(),),
-          );
-          
-      }
+        } else {
+          return RouteManager.login as Widget;
+        }
+        return RouteManager.login as Widget;
+      },
     );
   }
 }
