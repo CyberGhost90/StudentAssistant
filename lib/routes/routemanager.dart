@@ -3,13 +3,14 @@ import 'package:student_assistant/feature/auth/auth_gate.dart';
 import 'package:student_assistant/feature/pages/login.dart';
 import 'package:student_assistant/feature/pages/register.dart';
 import 'package:student_assistant/views/student_view.dart';
+import 'package:student_assistant/views/stud_home_screen.dart';
 import 'package:student_assistant/views/application_form_screen.dart';
 import 'package:student_assistant/views/application_detail_screen.dart';
-import 'package:student_assistant/views/admin_view.dart';
+import 'package:student_assistant/views/adminView.dart';
 import 'package:student_assistant/models/application_model.dart';
 
 class RouteManager {
-  static const String authGate = '/';
+  static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
   static const String studHome = '/studHome';
@@ -20,7 +21,7 @@ class RouteManager {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case authGate:
+      case splash:
         return MaterialPageRoute(builder: (_) => const AuthGate());
 
       case login:
@@ -30,10 +31,10 @@ class RouteManager {
         return MaterialPageRoute(builder: (_) => const Register());
 
       case studHome:
-        return MaterialPageRoute(builder: (_) => const StudentHomeScreen());
+        return MaterialPageRoute(builder: (_) => const StudHomeScreen());
 
       case adminHome:
-        return MaterialPageRoute(builder: (_) => const AdminView());
+        return MaterialPageRoute(builder: (_) => const AdminHomePage());
 
       case applicationForm:
         return MaterialPageRoute(builder: (_) => const ApplicationFormScreen());

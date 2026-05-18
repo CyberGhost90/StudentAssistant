@@ -6,16 +6,15 @@ class Exceptionerror implements Exception {
   @override
   String toString() => 'Exceptionerror: $message';
 
-  static void snackBarError(String message) {
-    final snackBarKey = GlobalKey<ScaffoldMessengerState>();
-    snackBarKey.currentState?.showSnackBar(SnackBar(content: Text(message)));
+  static void SnackBarError(BuildContext context) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  static void alertDialogError(String message) {
-    final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
+  static void AlertDialogError(BuildContext context) {
     showDialog(
-      context: navigatorKey.currentContext!,
+      context: context,
       builder: (context) => AlertDialog(
         title: const Text('Error'),
         content: Text(message),

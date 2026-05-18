@@ -1,12 +1,12 @@
+
 import 'package:flutter/material.dart';
-import 'package:student_assistant/models/repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:student_assistant/models/application_model.dart';
 
 class AdminViewModel extends ChangeNotifier {
-  final Repository _repository = Repository();
+  final SupabaseClient _supabaseClient;
 
-  AdminViewModel();
+  AdminViewModel(this._supabaseClient);
 
   // ─── State ────────────────────────────────────────────────────────────────
 
@@ -30,12 +30,9 @@ class AdminViewModel extends ChangeNotifier {
 
   // Convenience counts for the dashboard
   int get totalCount => _applications.length;
-  int get pendingCount =>
-      _applications.where((a) => a.status == 'pending').length;
-  int get approvedCount =>
-      _applications.where((a) => a.status == 'approved').length;
-  int get rejectedCount =>
-      _applications.where((a) => a.status == 'rejected').length;
+  int get pendingCount => _applications.where((a) => a.status == 'pending').length;
+  int get approvedCount => _applications.where((a) => a.status == 'approved').length;
+  int get rejectedCount => _applications.where((a) => a.status == 'rejected').length;
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   void _setLoading(bool value) {
@@ -61,11 +58,10 @@ class AdminViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+ 
   /// [_filteredApplications].
   void _applyFilter() {
-    _filteredApplications = _statusFilter == 'all'
-        ? List.from(_applications)
-        : _applications.where((a) => a.status == _statusFilter).toList();
+    _filteredApplications = _statusFilter =='all'? List.from(_applications) : _applications.where((a)=>a.status == _statusFilter).toList();
     notifyListeners();
   }
 
@@ -85,16 +81,19 @@ class AdminViewModel extends ChangeNotifier {
     _errorMessage = null;
 
     try {
-      final response =await _repository.getStudents();
-      _applications = response;
-      if (_applications.isNotEmpty) {
-        _setSuccess('Applications loaded successfully.');
-      } else {
-        _setError('No applications found.');
-      }
+      final response = await _supabaseClient
+          .from('student_applications')
+          .select()
+          .order('submission_date', ascending: false);
+
+      _applications =
+          (response as List).map((e) => ApplicationModel.fromJson(e)).toList();
+
       _applyFilter();
+    } on PostgrestException catch (e) {
+      _setError('Failed to load applications: ${e.message}');
     } catch (e) {
-      _setError('Failed to load applications: ${e.toString()}');
+      _setError('An unexpected error occurred: $e');
     } finally {
       _setLoading(false);
     }
@@ -102,8 +101,8 @@ class AdminViewModel extends ChangeNotifier {
 
   // ─── UPDATE ───────────────────────────────────────────────────────────────
 
-  /// Update the status of an application to newStatus.
-  /// newStatus must be one of: 'pending', 'approved', 'rejected'.
+  /// Update the status of an application to [newStatus].
+  /// [newStatus] must be one of: 'pending', 'approved', 'rejected'.
   Future<bool> updateApplicationStatus(
     String applicationId,
     String newStatus,
@@ -129,11 +128,7 @@ class AdminViewModel extends ChangeNotifier {
       }
 
       _setSuccess(
-        'Application ${newStatus == 'approved'
-            ? 'approved'
-            : newStatus == 'rejected'
-            ? 'rejected'
-            : 'updated'} successfully.',
+        'Application ${newStatus == 'approved' ? 'approved' : newStatus == 'rejected' ? 'rejected' : 'updated'} successfully.',
       );
       return true;
     } on PostgrestException catch (e) {
@@ -147,14 +142,16 @@ class AdminViewModel extends ChangeNotifier {
     }
   }
 
+  
   Future<bool> approveApplication(String applicationId) =>
       updateApplicationStatus(applicationId, 'approved');
 
   Future<bool> rejectApplication(String applicationId) =>
       updateApplicationStatus(applicationId, 'rejected');
 
-  // ─── DELETE
+  // ─── DELETE 
 
+  
   Future<bool> deleteApplication(String applicationId) async {
     _setLoading(true);
 
@@ -179,6 +176,7 @@ class AdminViewModel extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
 
   /// Shows a confirmation [AlertDialog] before performing a destructive action.
   /// Returns `true` if the user confirmed, `false` otherwise.

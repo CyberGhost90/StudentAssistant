@@ -1,27 +1,29 @@
-// ignore_for_file: unnecessary_null_comparison
-
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
-import 'package:student_assistant/models/application_model.dart';
+import 'package:flutter/material.dart';
 import 'package:student_assistant/models/admin_model.dart';
-import 'package:student_assistant/models/exception_error.dart';
+import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 //relevant people should update this to make it useful and test the code- KING
 class Repository {
+<<<<<<< HEAD
   //Supabase table clients
   final adminClient = Supabase.instance.client.from('admin');
   final studentClient = Supabase.instance.client.from('student');
 
   //Local cache
+=======
+  //storage for all the data that we want to use in the app
+>>>>>>> 4b24eceff9bab363ab8bc8ea257ccb1be2b340d7
   Admin? _admin;
   Student? _student;
-
+  final adminClient = Supabase.instance.client.from('admin');
+  final studentClient = Supabase.instance.client.from('student');
   //getters
   Admin? get admin => _admin;
   Student? get student => _student;
 
+<<<<<<< HEAD
   //get applications for a student
   Future<List<ApplicationModel>> fetchApplications() async {
     try {
@@ -40,17 +42,22 @@ class Repository {
 
   //-------------------------STUDENT------------------------
   //Returns all students
+=======
+>>>>>>> 4b24eceff9bab363ab8bc8ea257ccb1be2b340d7
   Future<Iterable<Student>> getStudents() async {
     try {
       final response = await studentClient.select();
       if (response.isEmpty != true) {
         return (response as List).map(
           (e) => Student(
+<<<<<<< HEAD
             firstName: e['FirstName'],
             surname: e['Surname'],
+=======
+>>>>>>> 4b24eceff9bab363ab8bc8ea257ccb1be2b340d7
             studentEmail: e['studentEmail'],
-            yearOfStudy: e['yearOfStudy'],
             password: e['password'],
+<<<<<<< HEAD
           ),
         );
       } else {
@@ -59,10 +66,23 @@ class Repository {
       }
     } catch (e) {
       Exceptionerror.snackBarError('Error occurred while fetching students.');
+=======
+            firstName: e['FirstName'],
+            Surname: e['Surname'],
+          ),
+        );
+      } else {
+        Exceptionerror.SnackBarError;
+        return [];
+      }
+    } catch (e) {
+      Exceptionerror.SnackBarError;
+>>>>>>> 4b24eceff9bab363ab8bc8ea257ccb1be2b340d7
       return [];
     }
   }
 
+<<<<<<< HEAD
   //Return one student
   Future<Student> getStudent(Student student) async {
     try {
@@ -136,6 +156,9 @@ class Repository {
 
   //-------------------------ADMIN-------------------------
   //Return 1 admin
+=======
+  //READ
+>>>>>>> 4b24eceff9bab363ab8bc8ea257ccb1be2b340d7
   Future<Admin> getAdmin(Admin admin) async {
     try {
       final response = await adminClient
@@ -149,58 +172,116 @@ class Repository {
           password: response['password'],
         );
       } else {
-        Exceptionerror.snackBarError('Admin not found.');
+        Exceptionerror.SnackBarError;
       }
       return admin;
     } catch (e) {
-      Exceptionerror.snackBarError('Error occurred while fetching admin.');
+      Exceptionerror.SnackBarError;
       return admin;
     }
   }
 
-  //Create admin
+  Future<Student> getStudent(Student student) async {
+    try {
+      final response = await studentClient
+          .select()
+          .eq(
+            'email',
+            student.studentEmail.toString(),
+          ) // Use the object's email
+          .single();
+
+      if (response.isEmpty == false) {
+        _student = Student(
+          studentEmail: response['studentEmail'],
+          password: response['password'],
+        ); // Assuming a cast method
+      } else {
+        Exceptionerror.SnackBarError;
+      }
+      return student;
+    } catch (e) {
+      Exceptionerror.SnackBarError;
+      return student;
+    }
+  }
+
+  //CREATE
   Future<Admin> createAdmin(Admin admin) async {
     try {
       admin = await adminClient.insert({
         'AdminEmail': admin.email,
         'password': admin.password,
-        'FirstName': admin.firstName,
-        'Surname': admin.surname,
+        'FirstName': admin.FirstName,
+        'Surname': admin.Surname,
       });
       // Update the local admin variable after successful insertion
       _admin = admin;
       return admin;
     } catch (e) {
-      Exceptionerror.alertDialogError(e.toString());
+      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
       return admin; // Return the original admin object in case of an error
     }
   }
 
-  //Update admin
+  Future<Student> createStudent(Student student) async {
+    try {
+      student = await studentClient.insert({
+        'studentEmail': student.studentEmail,
+        'password': student.password,
+        'FirstName': student.firstName,
+        'Surname': student.Surname,
+      });
+      // Update the local student variable after successful insertion
+      _student = student;
+      return student;
+    } catch (e) {
+      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+      return student; // Return the original student object in case of an error
+    }
+  }
+
+  //UPDATE
   Future<void> updateAdmin(Admin admin) async {
     try {
       await adminClient
           .update({
             'AdminEmail': admin.email,
             'password': admin.password,
-            'FirstName': admin.firstName,
-            'Surname': admin.surname,
+            'FirstName': admin.FirstName,
+            'Surname': admin.Surname,
           })
           .eq('AdminEmail', admin.email.toString());
     } catch (e) {
-      Exceptionerror.snackBarError('Error occurred while updating admin.');
+      Exceptionerror.SnackBarError;
     }
   }
 
-  //Delete admin
+  Future<void> updateStudent(Student student) async {
+    try {
+      await studentClient
+          .update({
+            'studentEmail': student.studentEmail,
+            'password': student.password,
+            'FirstName': student.firstName,
+            'Surname': student.Surname,
+          })
+          .eq('studentEmail', student.studentEmail.toString());
+    } catch (e) {
+      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+    }
+  }
+
+  //DELETE
   Future<void> deleteAdmin(Admin admin) async {
     try {
       await adminClient.delete().eq('AdminEmail', admin.email.toString());
     } catch (e) {
-      Exceptionerror.alertDialogError(e.toString());
+      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
     }
   }
 
+<<<<<<< HEAD
   //-------------------------DOCUMENT STORAGE--------------------------
   final String bucketName = 'student-bucket';
 
@@ -264,6 +345,16 @@ class Repository {
         'Error occurred while updating document URL.',
       );
       return null;
+=======
+  Future<void> deleteStudent(Student student) async {
+    try {
+      await studentClient.delete().eq(
+        'studentEmail',
+        student.studentEmail.toString(),
+      );
+    } catch (e) {
+      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
+>>>>>>> 4b24eceff9bab363ab8bc8ea257ccb1be2b340d7
     }
   }
 }
