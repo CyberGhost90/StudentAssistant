@@ -287,7 +287,7 @@ class StudentViewModel extends ChangeNotifier {
       supportingDocument!,
     );
     if (fileUrl != null) {
-      student.supportingDocumentUrl = fileUrl;
+      student?.supportingDocumentUrl = fileUrl;
       _supportingDocument = fileUrl as File?;
       notifyListeners();
     }
