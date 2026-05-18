@@ -1,9 +1,35 @@
 class Admin {
   String? email;
-  String? FirstName;
-  String? Surname;
+  String? firstName;
+  String? surname;
   String? password;
-  String? Status;
+  String? status;
 
-  Admin({this.email, this.FirstName, this.Surname, this.password, this.Status});
+  Admin({
+    this.email, 
+    this.firstName, 
+    this.surname, 
+    this.password, 
+    this.status
+    });
+
+  factory Admin.fromJson(Map<String, dynamic> json) {
+    return Admin(
+      email: json['AdminEmail'],
+      firstName: json['FirstName'],
+      surname: json['Surname'],
+      password: json['password'],
+      status: json['status'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'AdminEmail': email,
+      'FirstName': firstName,
+      'Surname': surname,
+      'password': password,
+      'status': status,
+    };
+  }
 }

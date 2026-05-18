@@ -1,398 +1,424 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:student_assistant/models/admin_model.dart';
-import 'package:student_assistant/models/exceptionError.dart';
+import 'package:student_assistant/models/application_model.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-//relevant people should update this to make it useful and test the code- KING
 class Repository {
-  //Supabase table clients
+  // Supabase table clients
   final adminClient = Supabase.instance.client.from('admin');
   final studentClient = Supabase.instance.client.from('student');
+  final applicationClient =
+      Supabase.instance.client.from('applications');
 
-  //Local cache
+  // Local cache
   Admin? _admin;
   Student? _student;
-  final adminClient = Supabase.instance.client.from('admin');
-  final studentClient = Supabase.instance.client.from('student');
-  //getters
+
+  // Getters
   Admin? get admin => _admin;
   Student? get student => _student;
 
-  //get applications for a student
-  Future<List<ApplicationModel>> fetchApplications() async {
-    try {
-      final response = await applicationClient.select().order(
-        'submission_date',
-        ascending: false,
-      );
-      return (response as List)
-          .map((e) => ApplicationModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      Exceptionerror.snackBarError('Error fetching applications: $e');
-      return [];
-    }
-  }
-
   //-------------------------STUDENT------------------------
-  //Returns all students
+
+  // Returns all students
   Future<Iterable<Student>> getStudents() async {
     try {
       final response = await studentClient.select();
-      if (response.isEmpty != true) {
-        return (response as List).map(
-          (e)=>Student(
-            firstName: e['FirstName'],
-            surname: e['Surname'],
-            studentEmail: e['studentEmail'],
-            yearOfStudy: e['yearOfStudy'],
-            password: e['password'],
-          )
-        );
-      }else{
-        Exceptionerror.snackBarError('No students found');
-        return [];
-      }
-    } catch (e) {
-      Exceptionerror.snackBarError('Error occurred while fetching students.');
-=======
-            firstName: e['FirstName'],
-            Surname: e['Surname'],
-          ),
-        );
+
+      if (response.isNotEmpty) {
+        return (response as List)
+            .map(
+              (e) => Student(
+                firstName: e['FirstName'],
+                surname: e['Surname'],
+                studentEmail: e['studentEmail'],
+                yearOfStudy: e['yearOfStudy'],
+                password: e['password'],
+              ),
+            )
+            .toList();
       } else {
-        Exceptionerror.SnackBarError;
         return [];
       }
     } catch (e) {
-      Exceptionerror.SnackBarError;
->>>>>>> 4b24eceff9bab363ab8bc8ea257ccb1be2b340d7
       return [];
     }
   }
 
-  //Return one student
-  Future<Student> getStudent(Student student) async{
-    try
-    {
-      final response = await studentClient.select().eq('email',student.studentEmail.toString()).single();
-      if(response.isEmpty ==false)
-      {
-        _student= Student(
-          studentEmail: response['studentEmail'],
-          password: response['password'],
-          firstName: response['FirstName'],
-          surname: response['Surname'],
-          yearOfStudy: response['yearOfStudy'],
-        );
-      }else{
-        Exceptionerror.snackBarError('Student not found.');
-      }
-      return student;
-    }catch (e){
-      Exceptionerror.snackBarError('Error occured while fetching student.');
-      return student;
+  // Return one student
+  Future<Student?> getStudent(Student student) async {
+    try {
+      final response = await studentClient
+          .select()
+          .eq('studentEmail', student.studentEmail.toString())
+          .single();
+
+      _student = Student(
+        studentEmail: response['studentEmail'],
+        password: response['password'],
+        firstName: response['FirstName'],
+        surname: response['Surname'],
+        yearOfStudy: response['yearOfStudy'],
+      );
+
+      return _student;
+    } catch (e) {
+      return null;
     }
   }
 
-  //Create student
-  Future<Student> createStudent(Student student) async
-  {
-    try{
+  // Create student
+  Future<Student?> createStudent(Student student) async {
+    try {
       await studentClient.insert({
-        'studentEmail' : student.studentEmail,
-        'password' : student.password,
-        'FirstName' : student.firstName,
-        'Surname' : student.surname,
+        'studentEmail': student.studentEmail,
+        'password': student.password,
+        'FirstName': student.firstName,
+        'Surname': student.surname,
+        'yearOfStudy': student.yearOfStudy,
       });
-      _student=student;
+
+      _student = student;
+
       return student;
-    }catch (e){
-      Exceptionerror.alertDialogError(e.toString());
-      return student;
+    } catch (e) {
+      return null;
     }
   }
 
-  //Update student
-  Future<void> updateStudent(Student student) async
-  {
-    try{
-      await studentClient.update({
-        'studentEmail' : student.studentEmail,
-        'password' : student.password,
-        'FirstName' : student.firstName,
-        'Surname' : student.surname,
-      }).eq('studentEmail', student.studentEmail.toString());
-      _student=student;
-    }catch (e){
-      Exceptionerror.alertDialogError(e.toString());
+  // Update student
+  Future<bool> updateStudent(Student student) async {
+    try {
+      await studentClient
+          .update({
+            'studentEmail': student.studentEmail,
+            'password': student.password,
+            'FirstName': student.firstName,
+            'Surname': student.surname,
+            'yearOfStudy': student.yearOfStudy,
+          })
+          .eq('studentEmail', student.studentEmail.toString());
+
+      _student = student;
+
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  //Delete student
-  Future<void> deleteStudent(Student student) async
-  {
-    try{
-      await studentClient.delete().eq('studentEmail', student.studentEmail.toString());
-    }catch (e){
-      Exceptionerror.alertDialogError(e.toString());
+  // Delete student
+  Future<bool> deleteStudent(Student student) async {
+    try {
+      await studentClient
+          .delete()
+          .eq('studentEmail', student.studentEmail.toString());
+
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
   //-------------------------ADMIN-------------------------
-  //Return 1 admin
-  Future<Admin> getAdmin(Admin admin) async {
+
+  // Return one admin
+  Future<Admin?> getAdmin(Admin admin) async {
     try {
       final response = await adminClient
           .select()
-          .eq('email', admin.email.toString())
+          .eq('AdminEmail', admin.email.toString())
           .single();
 
-      if (response.isEmpty == false) {
-        _admin = Admin(
-          email: response['AdminEmail'],
-          password: response['password'],
-        );
-      } else {
-        Exceptionerror.SnackBarError;
-      }
-      return admin;
+      _admin = Admin(
+        email: response['AdminEmail'],
+        password: response['password'],
+        firstName: response['FirstName'],
+        surname: response['Surname'],
+      );
+
+      return _admin;
     } catch (e) {
-      Exceptionerror.SnackBarError;
-      return admin;
+      return null;
     }
   }
 
-  //Create admin
-  Future<Admin> createAdmin(Admin admin) async {
+  // Create admin
+  Future<Admin?> createAdmin(Admin admin) async {
     try {
-      admin = await adminClient.insert({
+      await adminClient.insert({
         'AdminEmail': admin.email,
         'password': admin.password,
-        'FirstName': admin.FirstName,
-        'Surname': admin.Surname,
+        'FirstName': admin.firstName,
+        'Surname': admin.surname,
       });
-      // Update the local admin variable after successful insertion
+
       _admin = admin;
+
       return admin;
     } catch (e) {
-      Exceptionerror.AlertDialogError(e.toString() as BuildContext);
-      return admin; // Return the original admin object in case of an error
+      return null;
     }
   }
 
-  //Update admin
-  Future<void> updateAdmin(Admin admin) async {
+  // Update admin
+  Future<bool> updateAdmin(Admin admin) async {
     try {
       await adminClient
           .update({
             'AdminEmail': admin.email,
             'password': admin.password,
-            'FirstName': admin.FirstName,
-            'Surname': admin.Surname,
+            'FirstName': admin.firstName,
+            'Surname': admin.surname,
           })
           .eq('AdminEmail', admin.email.toString());
+
+      return true;
     } catch (e) {
-      Exceptionerror.snackBarError('Error occurred while updating admin.');
+      return false;
     }
   }
 
-  //Delete admin
-  Future<void> deleteAdmin(Admin admin) async {
+  // Delete admin
+  Future<bool> deleteAdmin(Admin admin) async {
     try {
-      await adminClient.delete().eq('AdminEmail', admin.email.toString());
+      await adminClient
+          .delete()
+          .eq('AdminEmail', admin.email.toString());
+
+      return true;
     } catch (e) {
-      Exceptionerror.alertDialogError(e.toString());
+      return false;
     }
   }
 
   //-------------------------APPLICATION--------------------------
 
-  //Get all applications for one student (scoped by userId)
-  Future<List<ApplicationModel>> getApplicationForStudent(String studentId) async
-  {
-    try
-    {
-      final response= await applicationClient.select().eq('student_id', studentId).order('submission_date',ascending: false);
-      return (response as List).map((e)=>ApplicationModel.fromJson(e)).toList();
-    }on PostgrestException catch (e){
-      Exceptionerror.snackBarError('Failed to load applications: ${e.message}.');
-      return [];
-    }catch (e){
-      Exceptionerror.snackBarError('Unexpected error loading applications.');
+  // Get all applications for one student
+  Future<List<ApplicationModel>> getApplicationForStudent(
+    String studentId,
+  ) async {
+    try {
+      final response = await applicationClient
+          .select()
+          .eq('student_id', studentId)
+          .order(
+            'submission_date',
+            ascending: false,
+          );
+
+      return (response as List)
+          .map((e) => ApplicationModel.fromJson(e))
+          .toList();
+    } catch (e) {
       return [];
     }
   }
 
-  //Get all applications (admin use only)
-  Future<List<ApplicationModel>> getAllApplications(String studentId) async
-  {
-    try
-    {
-      final response= await applicationClient.select().order('submission_date',ascending: false);
-      return (response as List).map((e)=>ApplicationModel.fromJson(e)).toList();
-    }on PostgrestException catch (e){
-      Exceptionerror.snackBarError('Failed to load applications: ${e.message}.');
-      return [];
-    }catch (e){
-      Exceptionerror.snackBarError('Unexpected error loading applications.');
+  // Get all applications (admin)
+  Future<List<ApplicationModel>> getAllApplications() async {
+    try {
+      final response = await applicationClient.select().order(
+            'submission_date',
+            ascending: false,
+          );
+
+      return (response as List)
+          .map((e) => ApplicationModel.fromJson(e))
+          .toList();
+    } catch (e) {
       return [];
     }
   }
 
-  //Check if student already has an application
-  Future<bool> studentHasApplication(String studentId) async
-  {
-    try
-    {
-      final response= await applicationClient.select().eq('student_id', studentId).limit(1);
+  // Check if student already applied
+  Future<bool> studentHasApplication(String studentId) async {
+    try {
+      final response = await applicationClient
+          .select()
+          .eq('student_id', studentId)
+          .limit(1);
+
       return (response as List).isNotEmpty;
-    }catch (e){
-      Exceptionerror.snackBarError('Unexpected error loading applications.');
+    } catch (e) {
       return false;
     }
   }
 
-  //Create- submit a new application (no file storage)
-  Future<bool> createApplication({required String studentId, required int yearOfStudy, required String module1, String? module2, required bool eligibilityConfirmed, String? documentUrl}) async
-  {
-    try
-    {
+  // Create application
+  Future<bool> createApplication({
+    required String studentId,
+    required int yearOfStudy,
+    required String module1,
+    String? module2,
+    required bool eligibilityConfirmed,
+    String? documentUrl,
+  }) async {
+    try {
       await applicationClient.insert({
         'student_id': studentId,
-        'year_of_Study': yearOfStudy,
+        'year_of_study': yearOfStudy,
         'module_1': module1,
         'module_2': module2,
         'eligibility_confirmed': eligibilityConfirmed,
-        'supporting_document_url' : documentUrl,
+        'supporting_document_url': documentUrl,
         'submission_date': DateTime.now().toIso8601String(),
-        'status': 'pending'
+        'status': 'pending',
       });
+
       return true;
-    }on PostgrestException catch (e){
-      Exceptionerror.snackBarError('Submission failed: ${e.message}.');
-      return false;
-    }catch (e){
-      Exceptionerror.snackBarError('Unexpected error during submission.');
+    } catch (e) {
       return false;
     }
   }
 
-  //Edit a pending application's fields
-  Future<bool> updateApplication({required String applicationId, required int? yearOfStudy, required String? module1, String? module2, required bool? eligibilityConfirmed, String? documentUrl}) async
-  {
-    try
-    {
-      final Map<String, dynamic> updates= {};
-      if(yearOfStudy!=null) updates['year_of_study'];
-      if(module1!=null) updates['module_1'];
-      updates['module_2'] = module2;
-      if(eligibilityConfirmed!=null) updates['eligibility_confirmed']=eligibilityConfirmed;
-      if(documentUrl !=null) updates['supporting_document_url'] = documentUrl;
-      
-      await applicationClient.update(updates).eq('id', applicationId);
+  // Update application
+  Future<bool> updateApplication({
+    required String applicationId,
+    int? yearOfStudy,
+    String? module1,
+    String? module2,
+    bool? eligibilityConfirmed,
+    String? documentUrl,
+  }) async {
+    try {
+      final Map<String, dynamic> updates = {};
+
+      if (yearOfStudy != null) {
+        updates['year_of_study'] = yearOfStudy;
+      }
+
+      if (module1 != null) {
+        updates['module_1'] = module1;
+      }
+
+      if (module2 != null) {
+        updates['module_2'] = module2;
+      }
+
+      if (eligibilityConfirmed != null) {
+        updates['eligibility_confirmed'] = eligibilityConfirmed;
+      }
+
+      if (documentUrl != null) {
+        updates['supporting_document_url'] = documentUrl;
+      }
+
+      await applicationClient
+          .update(updates)
+          .eq('id', applicationId);
+
       return true;
-    }on PostgrestException catch (e){
-      Exceptionerror.snackBarError('Update failed: ${e.message}.');
-      return false;
-    }catch (e){
-      Exceptionerror.snackBarError('Unexpected error during update.');
+    } catch (e) {
       return false;
     }
   }
 
-  //Change application status(admin only)
-  Future<bool> updateApplicationStatus({required String applicationId, required String newStatus}) async
-  {
-    try
-    {
-      await applicationClient.update({'status': newStatus}).eq('id',applicationId);
+  // Update application status
+  Future<bool> updateApplicationStatus({
+    required String applicationId,
+    required String newStatus,
+  }) async {
+    try {
+      await applicationClient.update({
+        'status': newStatus,
+      }).eq('id', applicationId);
+
       return true;
-    }on PostgrestException catch (e)
-    {
-      Exceptionerror.snackBarError('Status update failed: ${e.message}.');
-      return false;
-    }catch (e)
-    {
-      Exceptionerror.snackBarError('Unexpected error updating status.');
+    } catch (e) {
       return false;
     }
-    
   }
 
-  //Delete an application record
-  Future<bool> deleteApplication(String applicationId) async
-  {
-    try
-    {
-      await applicationClient.delete().eq('id',applicationId);
+  // Delete application
+  Future<bool> deleteApplication(String applicationId) async {
+    try {
+      await applicationClient
+          .delete()
+          .eq('id', applicationId);
+
       return true;
-    }on PostgrestException catch (e)
-    {
-      Exceptionerror.snackBarError('Delete failed: ${e.message}.');
-      return false;
-    }catch (e)
-    {
-      Exceptionerror.snackBarError('Unexpected error updating delete.');
+    } catch (e) {
       return false;
     }
-    
   }
 
   //-------------------------DOCUMENT STORAGE--------------------------
-  final String bucketName='student-bucket';
 
-  //Pick any file type (CV, ID copy, academic record, cover letter, etc.)
+  final String bucketName = 'student-bucket';
+
+  // Pick document
   Future<File?> pickStudentDocs() async {
-    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.any);
+    FilePickerResult? result = await FilePicker.pickFiles();
+
     if (result != null && result.files.single.path != null) {
       return File(result.files.single.path!);
     }
+
     return null;
   }
 
-  //upload a student document- preserves original file extension
-  Future<String?> uploadStudentDocs(String studentId, File file) async {
+  // Upload document
+  Future<String?> uploadStudentDocs(
+    String studentId,
+    File file,
+  ) async {
     try {
       final ext = file.path.split('.').last;
-      final fileName ='${DateTime.now().millisecondsSinceEpoch}.$ext';
+
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}.$ext';
+
       final path = '$studentId/$fileName';
-    
-      await Supabase.instance.client.storage.from(bucketName).upload(path,file,fileOptions: const FileOptions(upsert: true));
-      
-      //Return public URL to be stored in student_applications table
-      return Supabase.instance.client.storage.from(bucketName).getPublicUrl(path);
-    } on StorageException catch (e) {
-     Exceptionerror.snackBarError('Upload failed: ${e.message}');
-     return null;
-    }catch (e){
-       Exceptionerror.snackBarError('Error occurred while uploading documents.');
+
+      await Supabase.instance.client.storage
+          .from(bucketName)
+          .upload(
+            path,
+            file,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      return Supabase.instance.client.storage
+          .from(bucketName)
+          .getPublicUrl(path);
+    } catch (e) {
       return null;
     }
   }
 
-  //Delete student document from storage
-  Future<void> deleteStudentDocs(String filePath) async {
+  // Delete document
+  Future<bool> deleteStudentDocs(String filePath) async {
     try {
-      await Supabase.instance.client.storage.from(bucketName).remove([filePath]);
-    }on StorageException catch (e) {
-     Exceptionerror.snackBarError('Delete failed: ${e.message}');
-    }catch (e) {
-      Exceptionerror.alertDialogError('Error occurred while deleting documents.',
-      );
+      await Supabase.instance.client.storage
+          .from(bucketName)
+          .remove([filePath]);
+
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  //Replace an existing document with a new one
-  Future<String?> updateStudentDocs(String studentId, String oldPath) async {
+  // Replace document
+  Future<String?> updateStudentDocs(
+    String studentId,
+    String oldPath,
+  ) async {
     try {
       final newFile = await pickStudentDocs();
+
       if (newFile == null) return null;
+
       await deleteStudentDocs(oldPath);
-      return await uploadStudentDocs(studentId,newFile);
+
+      return await uploadStudentDocs(
+        studentId,
+        newFile,
+      );
     } catch (e) {
-      Exceptionerror.snackBarError('Error occurred while updating document URL.',);
       return null;
     }
   }
