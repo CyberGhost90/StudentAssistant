@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:student_assistant/routes/routemanager.dart';
+import 'package:student_assistant/feature/pages/login.dart';
+import 'package:student_assistant/views/adminView.dart';
+import 'package:student_assistant/views/studView.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthGate extends StatelessWidget {
@@ -22,14 +24,14 @@ class AuthGate extends StatelessWidget {
 
         if (session != null) {
           if (session.user.email!.contains('@stud.cut.ac.za')) {
-            return RouteManager.studHome as Widget;
+            return const Studview();
           } else if (session.user.email!.contains('@cut.ac.za')) {
-            return RouteManager.adminHome as Widget;
+            return const AdminHomePage();
           }
         } else {
-          return RouteManager.login as Widget;
+          return const Login();
         }
-        return RouteManager.login as Widget;
+        return const Login();
       },
     );
   }
