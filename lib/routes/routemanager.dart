@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:student_assistant/feature/auth/auth_gate.dart';
 import 'package:student_assistant/feature/pages/login.dart';
 import 'package:student_assistant/feature/pages/register.dart';
-import 'package:student_assistant/views/student_view.dart';
-import 'package:student_assistant/views/stud_home_screen.dart';
+import 'package:student_assistant/models/student_model.dart';
+import 'package:student_assistant/views/studview.dart';
 import 'package:student_assistant/views/application_form_screen.dart';
 import 'package:student_assistant/views/application_detail_screen.dart';
 import 'package:student_assistant/views/adminView.dart';
-import 'package:student_assistant/models/application_model.dart';
 
+//PLEASE DO NOT EDIT THIS PAGE
 class RouteManager {
   static const String splash = '/';
   static const String login = '/login';
@@ -31,7 +31,7 @@ class RouteManager {
         return MaterialPageRoute(builder: (_) => const Register());
 
       case studHome:
-        return MaterialPageRoute(builder: (_) => const StudHomeScreen());
+        return MaterialPageRoute(builder: (_) => const Studview());
 
       case adminHome:
         return MaterialPageRoute(builder: (_) => const AdminHomePage());
@@ -40,16 +40,13 @@ class RouteManager {
         return MaterialPageRoute(builder: (_) => const ApplicationFormScreen());
 
       case applicationDetail:
-        final app = settings.arguments as ApplicationModel;
+        final app = settings.arguments as Student;
         return MaterialPageRoute(
           builder: (_) => ApplicationDetailScreen(application: app),
         );
 
       case editApplication:
-        final app = settings.arguments as ApplicationModel;
-        return MaterialPageRoute(
-          builder: (_) => ApplicationFormScreen(applicationToEdit: app),
-        );
+        return MaterialPageRoute(builder: (_) => ApplicationFormScreen());
 
       default:
         return MaterialPageRoute(

@@ -5,14 +5,14 @@ import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:student_assistant/routes/routemanager.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class Register extends StatefulWidget {
+  const Register({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<Register> createState() => _RegisterState();
 }
 
-class _LoginState extends State<Login> {
+class _RegisterState extends State<Register> {
   //auth service
   final AuthService _authService = AuthService();
   //form key
@@ -37,6 +37,7 @@ class _LoginState extends State<Login> {
   void register() async {
     final String email = _emailController.text;
     final String password = _passwordController.text;
+    // ignore: unused_local_variable
     final String confirmPassword = _confirmPasswordController.text;
     final String firstName = _firstNameController.text;
     final String surname = _surnameController.text;
