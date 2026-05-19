@@ -48,15 +48,15 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           const SizedBox(height: 16.0),
-                          DropdownButtonFormField<int>(
+                          DropdownButtonFormField<DateTime>(
                             value: viewModel.yearOfStudy,
                             decoration: const InputDecoration(
                               labelText: 'Year of Study',
                               border: OutlineInputBorder(),
                             ),
                             items: _yearsOfStudy.map((year) {
-                              return DropdownMenuItem<int>(
-                                value: year,
+                              return DropdownMenuItem<DateTime>(
+                                value: DateTime(DateTime.now().year - year),
                                 child: Text('Year $year'),
                               );
                             }).toList(),
@@ -65,7 +65,12 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                               viewModel.setModule1(null);
                               viewModel.setModule2(null);
                             },
-                            validator: viewModel.validateYearOfStudy,
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Please select a year of study';
+                              }
+                              return null;
+                            },
                           ),
                         ],
                       ),
