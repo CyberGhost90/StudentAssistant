@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:student_assistant/models/admin_model.dart';
-import 'package:student_assistant/models/application_model.dart';
+import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,8 +9,8 @@ class Repository {
   // Supabase table clients
   final adminClient = Supabase.instance.client.from('admin');
   final studentClient = Supabase.instance.client.from('student');
-  final applicationClient =
-      Supabase.instance.client.from('applications');
+  final String bucketName = 'student-bucket';
+  
 
   // Local cache
   Admin? _admin;
@@ -193,171 +193,16 @@ class Repository {
       return false;
     }
   }
-
-  //-------------------------APPLICATION--------------------------
-
-  // Get all applications for one student
-  Future<List<ApplicationModel>> getApplicationForStudent(
-    String studentId,
-  ) async {
-    try {
-      final response = await applicationClient
-          .select()
-          .eq('student_id', studentId)
-          .order(
-            'submission_date',
-            ascending: false,
-          );
-
-      return (response as List)
-          .map((e) => ApplicationModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // Get all applications (admin)
-  Future<List<ApplicationModel>> getAllApplications() async {
-    try {
-      final response = await applicationClient.select().order(
-            'submission_date',
-            ascending: false,
-          );
-
-      return (response as List)
-          .map((e) => ApplicationModel.fromJson(e))
-          .toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // Check if student already applied
-  Future<bool> studentHasApplication(String studentId) async {
-    try {
-      final response = await applicationClient
-          .select()
-          .eq('student_id', studentId)
-          .limit(1);
-
-      return (response as List).isNotEmpty;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Create application
-  Future<bool> createApplication({
-    required String studentId,
-    required int yearOfStudy,
-    required String module1,
-    String? module2,
-    required bool eligibilityConfirmed,
-    String? documentUrl,
-  }) async {
-    try {
-      await applicationClient.insert({
-        'student_id': studentId,
-        'year_of_study': yearOfStudy,
-        'module_1': module1,
-        'module_2': module2,
-        'eligibility_confirmed': eligibilityConfirmed,
-        'supporting_document_url': documentUrl,
-        'submission_date': DateTime.now().toIso8601String(),
-        'status': 'pending',
-      });
-
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Update application
-  Future<bool> updateApplication({
-    required String applicationId,
-    int? yearOfStudy,
-    String? module1,
-    String? module2,
-    bool? eligibilityConfirmed,
-    String? documentUrl,
-  }) async {
-    try {
-      final Map<String, dynamic> updates = {};
-
-      if (yearOfStudy != null) {
-        updates['year_of_study'] = yearOfStudy;
-      }
-
-      if (module1 != null) {
-        updates['module_1'] = module1;
-      }
-
-      if (module2 != null) {
-        updates['module_2'] = module2;
-      }
-
-      if (eligibilityConfirmed != null) {
-        updates['eligibility_confirmed'] = eligibilityConfirmed;
-      }
-
-      if (documentUrl != null) {
-        updates['supporting_document_url'] = documentUrl;
-      }
-
-      await applicationClient
-          .update(updates)
-          .eq('id', applicationId);
-
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Update application status
-  Future<bool> updateApplicationStatus({
-    required String applicationId,
-    required String newStatus,
-  }) async {
-    try {
-      await applicationClient.update({
-        'status': newStatus,
-      }).eq('id', applicationId);
-
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Delete application
-  Future<bool> deleteApplication(String applicationId) async {
-    try {
-      await applicationClient
-          .delete()
-          .eq('id', applicationId);
-
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
   //-------------------------DOCUMENT STORAGE--------------------------
-
-  final String bucketName = 'student-bucket';
-
   // Pick document
   Future<File?> pickStudentDocs() async {
-    FilePickerResult? result = await FilePicker.pickFiles();
+    FilePickerResult? result = await FilePicker.pickFiles(allowMultiple: true);
 
-    if (result != null && result.files.single.path != null) {
-      return File(result.files.single.path!);
+    if (result != null) {
+      List<File> files = result.paths.map((path) => File(path!)).toList();
+    } else {
+      Exceptionerror.SnackBarError('User cancelled document selection');
     }
-
-    return null;
   }
 
   // Upload document
