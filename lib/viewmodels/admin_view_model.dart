@@ -1,13 +1,20 @@
-
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:student_assistant/models/exceptionError.dart';
+import 'package:student_assistant/models/repository.dart';
+import 'package:student_assistant/models/student_model.dart';
 import 'package:student_assistant/models/application_model.dart';
 
 class AdminViewModel extends ChangeNotifier {
-  final SupabaseClient _supabaseClient;
-
-  AdminViewModel(this._supabaseClient);
-
+  final Repository _repository = Repository();
+  final Student _student = Student(
+    studentEmail: "",
+    firstName: "",
+    surname: "",
+    firstModule: "",
+    secondModule: "",
+    status: "",
+    yearOfStudy: DateTime.now(),
+  );
   // ─── State ────────────────────────────────────────────────────────────────
 
   List<ApplicationModel> _applications = [];
@@ -30,19 +37,16 @@ class AdminViewModel extends ChangeNotifier {
 
   // Convenience counts for the dashboard
   int get totalCount => _applications.length;
-  int get pendingCount => _applications.where((a) => a.status == 'pending').length;
-  int get approvedCount => _applications.where((a) => a.status == 'approved').length;
-  int get rejectedCount => _applications.where((a) => a.status == 'rejected').length;
+  int get pendingCount =>
+      _applications.where((a) => a.status == 'pending').length;
+  int get approvedCount =>
+      _applications.where((a) => a.status == 'approved').length;
+  int get rejectedCount =>
+      _applications.where((a) => a.status == 'rejected').length;
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
-  }
-
-  void _setError(String? message) {
-    _errorMessage = message;
-    _successMessage = null;
     notifyListeners();
   }
 
@@ -58,10 +62,11 @@ class AdminViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
- 
   /// [_filteredApplications].
   void _applyFilter() {
-    _filteredApplications = _statusFilter =='all'? List.from(_applications) : _applications.where((a)=>a.status == _statusFilter).toList();
+    _filteredApplications = _statusFilter == 'all'
+        ? List.from(_applications)
+        : _applications.where((a) => a.status == _statusFilter).toList();
     notifyListeners();
   }
 
@@ -81,19 +86,15 @@ class AdminViewModel extends ChangeNotifier {
     _errorMessage = null;
 
     try {
-      final response = await _supabaseClient
-          .from('student_applications')
-          .select()
-          .order('submission_date', ascending: false);
-
-      _applications =
-          (response as List).map((e) => ApplicationModel.fromJson(e)).toList();
-
+      final response = await _repository.getStudents();
+      _applications = (response as List)
+          .map((e) => ApplicationModel.fromJson(e))
+          .toList();
       _applyFilter();
-    } on PostgrestException catch (e) {
-      _setError('Failed to load applications: ${e.message}');
     } catch (e) {
-      _setError('An unexpected error occurred: $e');
+      Exceptionerror.snackBarError(
+        'Failed to load applications: ${e.toString()}',
+      );
     } finally {
       _setLoading(false);
     }
@@ -101,8 +102,8 @@ class AdminViewModel extends ChangeNotifier {
 
   // ─── UPDATE ───────────────────────────────────────────────────────────────
 
-  /// Update the status of an application to [newStatus].
-  /// [newStatus] must be one of: 'pending', 'approved', 'rejected'.
+  /// Update the status of an application to newStatus.
+  /// newStatus must be one of: 'pending', 'approved', 'rejected'.
   Future<bool> updateApplicationStatus(
     String applicationId,
     String newStatus,
@@ -111,15 +112,11 @@ class AdminViewModel extends ChangeNotifier {
       ['pending', 'approved', 'rejected'].contains(newStatus),
       'Invalid status value: $newStatus',
     );
-
+    _student.status = newStatus; // Update the student's status before saving
     _setLoading(true);
 
     try {
-      await _supabaseClient
-          .from('student_applications')
-          .update({'status': newStatus})
-          .eq('id', applicationId);
-
+      await _repository.updateStudent(_student);
       // Update locally so the UI reflects the change without a full reload.
       final index = _applications.indexWhere((a) => a.id == applicationId);
       if (index != -1) {
@@ -128,57 +125,55 @@ class AdminViewModel extends ChangeNotifier {
       }
 
       _setSuccess(
-        'Application ${newStatus == 'approved' ? 'approved' : newStatus == 'rejected' ? 'rejected' : 'updated'} successfully.',
+        'Application ${newStatus == 'approved'
+            ? 'approved'
+            : newStatus == 'rejected'
+            ? 'rejected'
+            : 'updated'} successfully.',
       );
       return true;
-    } on PostgrestException catch (e) {
-      _setError('Failed to update application: ${e.message}');
-      return false;
     } catch (e) {
-      _setError('An unexpected error occurred: $e');
+      Exceptionerror.snackBarError(
+        'Failed to update application: ${e.toString()}',
+      );
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  
   Future<bool> approveApplication(String applicationId) =>
       updateApplicationStatus(applicationId, 'approved');
 
   Future<bool> rejectApplication(String applicationId) =>
       updateApplicationStatus(applicationId, 'rejected');
 
-  // ─── DELETE 
+  // ─── DELETE
 
-  
   Future<bool> deleteApplication(String applicationId) async {
     _setLoading(true);
 
     try {
-      await _supabaseClient
-          .from('student_applications')
-          .delete()
-          .eq('id', applicationId);
+      bool success = await _repository.deleteStudent(_student);
+      if (success) {
+        _applications.removeWhere((a) => a.id == applicationId);
+        _applyFilter();
 
-      _applications.removeWhere((a) => a.id == applicationId);
-      _applyFilter();
-
-      _setSuccess('Application removed successfully.');
-      return true;
-    } on PostgrestException catch (e) {
-      _setError('Failed to delete application: ${e.message}');
+        _setSuccess('Application removed successfully.');
+        return true;
+      }
       return false;
     } catch (e) {
-      _setError('An unexpected error occurred: $e');
+      Exceptionerror.snackBarError(
+        'Failed to delete application: ${e.toString()}',
+      );
       return false;
     } finally {
       _setLoading(false);
     }
   }
 
-
-  /// Shows a confirmation [AlertDialog] before performing a destructive action.
+  /// Shows a confirmation AlertDialog] before performing a destructive action.
   /// Returns `true` if the user confirmed, `false` otherwise.
   Future<bool> showConfirmationDialog(
     BuildContext context, {

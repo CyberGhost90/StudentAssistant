@@ -8,6 +8,7 @@ class Student {
   String? firstModule;
   String? secondModule;
   String? photoUrl;
+  String? status;
 
   Student({
     this.studentEmail,
@@ -18,6 +19,7 @@ class Student {
     this.firstModule,
     this.secondModule,
     this.photoUrl,
+    this.status,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {

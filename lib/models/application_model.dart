@@ -47,7 +47,20 @@ class ApplicationModel {
       'eligibility_confirmed': eligibilityConfirmed,
       'supporting_document_url': supportingDocumentUrl,
       'status': status,
-      'submission_date': submissionDate?.toIso8601String(),
+      'submission_date': submissionDate?.toString(),
     };
+  }
+
+  ApplicationModel copyWith({String? id, String? studentId, String? status}) {
+    return ApplicationModel(
+      id: id ?? this.id,
+      studentId: studentId ?? this.studentId,
+      yearOfStudy: yearOfStudy ?? yearOfStudy,
+      module1: module1 ?? module1,
+      module2: module2 ?? module2,
+      eligibilityConfirmed: eligibilityConfirmed ?? eligibilityConfirmed,
+      supportingDocumentUrl: supportingDocumentUrl ?? supportingDocumentUrl,
+      status: status ?? this.status,
+    );
   }
 }
