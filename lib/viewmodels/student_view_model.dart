@@ -15,6 +15,7 @@ class StudentViewModel extends ChangeNotifier {
   bool _eligibilityConfirmed = false;
   bool _isLoading = false;
   String? _errorMessage;
+  String? _successMessage;
 
   // Getters for form fields
   int? get yearOfStudy => _yearOfStudy;
@@ -24,6 +25,7 @@ class StudentViewModel extends ChangeNotifier {
   bool get eligibilityConfirmed => _eligibilityConfirmed;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get successMessage => _successMessage;
 
   // Setters for form fields
   void setYearOfStudy(int? year) {
@@ -103,6 +105,7 @@ class StudentViewModel extends ChangeNotifier {
   Future<bool> submitApplication() async {
     _isLoading = true;
     _errorMessage = null;
+    _successMessage = null;
     notifyListeners();
 
     // Basic validation before submission
@@ -138,40 +141,120 @@ class StudentViewModel extends ChangeNotifier {
         return false;
       }
 
-      final documentUrl = await _uploadDocument();
-      if (_supportingDocument != null && documentUrl == null) {
+      //Upload document via Repository if one was picked
+      String? documentUrl;
+      if (_supportingDocument != null) {
+        documentUrl = await _repository.uploadStudentDocs(
+          userId,
+          _supportingDocument!,
+        );
+      }
+      if (documentUrl == null) {
         _isLoading = false;
         notifyListeners();
-        return false; // Upload failed
+        return false;
       }
 
-      final applicationData = {
-        'student_id': userId,
-        'year_of_study': _yearOfStudy,
-        'module_1': _module1,
-        'module_2': _module2,
-        'supporting_document_url': documentUrl,
-        'eligibility_confirmed': _eligibilityConfirmed,
-        'submission_date': DateTime.now().toIso8601String(),
-      };
-
-      await _supabaseClient
-          .from('student_applications')
-          .insert(applicationData);
-
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on PostgrestException catch (e) {
-      _errorMessage = 'Submission failed: ${e.message}';
-      _isLoading = false;
-      notifyListeners();
-      return false;
+      //Create via Repository
+      final success = await _repository.createApplication(
+        studentId: userId,
+        yearOfStudy: _yearOfStudy!,
+        module1: _module1!,
+        eligibilityConfirmed: eligibilityConfirmed,
+        documentUrl: documentUrl,
+      );
+      if (success) {
+        await loadStudentData();
+      } else {
+        _errorMessage = 'Sumission failed. Please try again.';
+        _isLoading = false;
+        notifyListeners();
+      }
+      return success;
     } catch (e) {
       _errorMessage = 'An unexpected error occurred: $e';
       _isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  //UPDATE: Edit existing (pending) application
+  Future<bool> updateApplication(
+    String applicationId, {
+    int? yearOfStudy,
+    String? module1,
+    String? module2,
+    bool? eligibilityConfirmed,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+
+      //uplaod new document via Repository
+      String? documentUrl;
+      if (_supportingDocument != null && userId != null) {
+        documentUrl = await _repository.uploadStudentDocs(
+          userId,
+          _supportingDocument!,
+        );
+      }
+
+      //Update via Repository
+      final success = await _repository.updateApplication(
+        applicationId: applicationId,
+        yearOfStudy: yearOfStudy,
+        module1: module1,
+        eligibilityConfirmed: eligibilityConfirmed,
+        documentUrl: documentUrl,
+      );
+      if (success) {
+        await loadStudentData();
+      } else {
+        _errorMessage = 'Update failed. Please try again.';
+        _isLoading = false;
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      _errorMessage = 'An unexpected error occurred : $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  //logout
+  Future<void> logout(BuildContext context) async {
+    await _authService.signOut();
+    if (context.mounted) {
+      Navigator.pushReplacementNamed(context, RouteManager.login);
+    }
+  }
+
+  //Reset form fields(call after successful submit)
+  void resetForm() {
+    _yearOfStudy = null;
+    _module1 = null;
+    _module2 = null;
+    _supportingDocument = null;
+    _eligibilityConfirmed = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  Future<void> pickDocument() async {
+    final fileUrl = await _repository.uploadStudentDocs(
+      studentID!,
+      supportingDocument!,
+    );
+    if (fileUrl != null) {
+      student?.supportingDocumentUrl = fileUrl;
+      _supportingDocument = fileUrl as File?;
+      notifyListeners();
     }
   }
 }
