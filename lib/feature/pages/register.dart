@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:student_assistant/feature/auth/auth_service.dart';
 import 'package:student_assistant/models/admin_model.dart';
+import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:student_assistant/routes/routemanager.dart';
 
@@ -16,11 +17,11 @@ class _LoginState extends State<Login> {
   final AuthService _authService = AuthService();
   //form key
   final _formKey = GlobalKey<FormState>();
-  Admin admin = Admin(FirstName: '', Surname: '', email: '', password: '');
+  Admin admin = Admin(firstName: '', surname: '', email: '', password: '');
   Student student = Student(
     studentEmail: '',
     firstName: '',
-    Surname: '',
+    surname: '',
     password: '',
   );
 
@@ -47,7 +48,7 @@ class _LoginState extends State<Login> {
         student = Student(
           studentEmail: email,
           firstName: firstName,
-          Surname: surname,
+          surname: surname,
           password: password,
         );
 
@@ -59,8 +60,8 @@ class _LoginState extends State<Login> {
       } else if (email.contains('@cut.ac.za')) {
         admin = Admin(
           email: email,
-          FirstName: firstName,
-          Surname: surname,
+          firstName: firstName,
+          surname: surname,
           password: password,
         );
 
@@ -70,17 +71,13 @@ class _LoginState extends State<Login> {
           (route) => false,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please use appropriate email to register.'),
-          ),
+        Exceptionerror.snackBarError(
+          'Please use appropriate email to register.',
         );
       }
     } catch (e) {
       // Show error message on login failure
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: ${e.toString()}')));
+      Exceptionerror.snackBarError(e.toString());
     }
   }
 
