@@ -3,14 +3,20 @@ class Student {
   String? firstName;
   String? surname;
   String? password;
-  int? yearOfStudy;
+  DateTime? yearOfStudy;
+  String? firstModule;
+  String? secondModule;
+  String? photoUrl;
 
   Student({
     this.studentEmail,
     this.firstName,
     this.surname,
     this.password,
-    this.yearOfStudy
+    this.yearOfStudy,
+    this.firstModule,
+    this.secondModule,
+    this.photoUrl,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -20,6 +26,9 @@ class Student {
       surname: json['Surname'],
       password: json['password'],
       yearOfStudy: json['yearOfStudy'],
+      firstModule: json['firstModule'],
+      secondModule: json['secondModule'],
+      photoUrl: json['photoUrl'],
     );
   }
 
@@ -30,6 +39,9 @@ class Student {
       'Surname': surname,
       'password': password,
       'yearOfStudy': yearOfStudy,
+      'firstModule': firstModule,
+      'secondModule': secondModule,
+      'photoUrl': photoUrl,
     };
   }
 }
