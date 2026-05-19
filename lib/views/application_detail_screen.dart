@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:student_assistant/models/student_model.dart';
-import 'package:student_assistant/repository.dart';
+import 'package:student_assistant/MODELS/repository.dart';
+import 'package:student_assistant/routes/routemanager.dart';
 
 class ApplicationDetailScreen extends StatefulWidget {
   final Student application;
@@ -9,7 +9,8 @@ class ApplicationDetailScreen extends StatefulWidget {
   const ApplicationDetailScreen({super.key, required this.application});
 
   @override
-  State<ApplicationDetailScreen> createState() => _ApplicationDetailScreenState();
+  State<ApplicationDetailScreen> createState() =>
+      _ApplicationDetailScreenState();
 }
 
 class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
@@ -49,8 +50,8 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
                   const SizedBox(height: 16),
                   _buildStatusChip(application.status ?? 'pending'),
                   const SizedBox(height: 16),
-                  if (application.supportingDocumentUrl != null)
-                    _buildDocumentSection(application.supportingDocumentUrl!),
+                  if (application.photoUrl != null)
+                    _buildDocumentSection(application.photoUrl!),
                   const SizedBox(height: 24),
                   if (!isPending)
                     Container(
@@ -65,7 +66,8 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
                             application.status?.toLowerCase() == 'approved'
                                 ? Icons.check_circle
                                 : Icons.cancel,
-                            color: application.status?.toLowerCase() == 'approved'
+                            color:
+                                application.status?.toLowerCase() == 'approved'
                                 ? Colors.green
                                 : Colors.red,
                           ),
@@ -103,20 +105,26 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
             const Divider(),
             _buildDetailRow('Student Email', application.studentEmail ?? 'N/A'),
             _buildDetailRow('First Name', application.firstName ?? 'N/A'),
-            _buildDetailRow('Surname', application.Surname ?? 'N/A'),
+            _buildDetailRow('Surname', application.surname ?? 'N/A'),
             const SizedBox(height: 12),
             const Text(
               'Module Selection',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
-            _buildDetailRow('Module 1', application.module1 ?? 'Not selected'),
-            _buildDetailRow('Module 2', application.module2 ?? 'Not selected'),
+            _buildDetailRow(
+              'Module 1',
+              application.firstModule ?? 'Not selected',
+            ),
+            _buildDetailRow(
+              'Module 2',
+              application.secondModule ?? 'Not selected',
+            ),
             const SizedBox(height: 12),
             _buildDetailRow(
               'Submission Date',
-              application.submissionDate != null
-                  ? '${application.submissionDate!.day}/${application.submissionDate!.month}/${application.submissionDate!.year}'
+              application.yearOfStudy != null
+                  ? '${application.yearOfStudy!.day}/${application.yearOfStudy!.month}/${application.yearOfStudy!.year}'
                   : 'N/A',
             ),
           ],
@@ -135,12 +143,13 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey),
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );
@@ -178,9 +187,7 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
         title: const Text('Supporting Document'),
         subtitle: Text(url.split('/').last),
         trailing: const Icon(Icons.open_in_new),
-        onTap: () {
-          
-        },
+        onTap: () {},
       ),
     );
   }
@@ -219,7 +226,7 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Application deleted successfully')),
         );
-        Navigator.pop(context, true); 
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -233,17 +240,6 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
   }
 
   void _navigateToEdit() {
-    
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (ctx) => EditApplicationScreen(application: widget.application),
-      ),
-    ).then((result) {
-      if (result == true && mounted) {
-        
-        setState(() {});
-      }
-    });
+    RouteManager.editApplication;
   }
 }
