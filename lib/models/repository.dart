@@ -210,7 +210,6 @@ class Repository {
   // Upload document
   Future<String?> uploadStudentDocs(String studentId, File file) async {
     try {
-      (File?,) file = pickStudentDocs() as (File?,);
       final ext = file.toString().split('.').last;
 
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
@@ -221,7 +220,7 @@ class Repository {
           .from(bucketName)
           .upload(
             path,
-            file as File,
+            file,
             fileOptions: const FileOptions(upsert: true),
           );
 

@@ -47,4 +47,28 @@ class Student {
       'photoUrl': photoUrl,
     };
   }
+
+  Student copyWith({
+    String? studentEmail,
+    String? firstName,
+    String? surname,
+    String? password,
+    DateTime? yearOfStudy,
+    String? firstModule,
+    String? secondModule,
+    String? photoUrl,
+    String? status,
+  }) {
+    return Student(
+      studentEmail: studentEmail ?? this.studentEmail,
+      firstName: firstName ?? this.firstName,
+      surname: surname ?? this.surname,
+      password: password ?? this.password,
+      yearOfStudy: yearOfStudy ?? this.yearOfStudy,
+      firstModule: firstModule ?? this.firstModule,
+      secondModule: secondModule ?? this.secondModule,
+      photoUrl: photoUrl ?? this.photoUrl,
+      status: status ?? this.status,
+    );
+  }
 }

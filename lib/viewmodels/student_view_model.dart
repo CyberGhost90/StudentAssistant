@@ -1,16 +1,26 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:student_assistant/feature/auth/auth_service.dart';
+import 'package:student_assistant/models/exceptionError.dart';
+import 'package:student_assistant/models/repository.dart';
+import 'package:student_assistant/models/student_model.dart';
+import 'package:student_assistant/routes/routemanager.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StudentViewModel extends ChangeNotifier {
-  final SupabaseClient _supabaseClient;
-
-  StudentViewModel(this._supabaseClient);
-
+  final Repository _repository = Repository();
+  final AuthService _authService = AuthService();
+  Student _student = Student(
+    studentEmail: "",
+    firstName: "",
+    surname: "",
+    yearOfStudy: DateTime.now(),
+    firstModule: "",
+    secondModule: "",
+    photoUrl: "",
+    status: "",
+  );
   // Form fields
-  int? _yearOfStudy;
-  String? _module1;
-  String? _module2;
   File? _supportingDocument;
   bool _eligibilityConfirmed = false;
   bool _isLoading = false;
@@ -18,38 +28,42 @@ class StudentViewModel extends ChangeNotifier {
   String? _successMessage;
 
   // Getters for form fields
-  int? get yearOfStudy => _yearOfStudy;
-  String? get module1 => _module1;
-  String? get module2 => _module2;
-  File? get supportingDocument => _supportingDocument;
+  DateTime? get yearOfStudy => _student.yearOfStudy;
+  String? get module1 => _student.firstModule;
+  String? get module2 => _student.secondModule;
+  File? get supportingDocument => _student.photoUrl as File?;
   bool get eligibilityConfirmed => _eligibilityConfirmed;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
 
   // Setters for form fields
-  void setYearOfStudy(int? year) {
-    _yearOfStudy = year;
+  void setYearOfStudy(DateTime? year) {
+    _student = _student.copyWith(yearOfStudy: year);
     notifyListeners();
   }
 
   void setModule1(String? module) {
-    _module1 = module;
+    _student = _student.copyWith(firstModule: module);
     notifyListeners();
   }
 
   void setModule2(String? module) {
-    _module2 = module;
+    _student = _student.copyWith(secondModule: module);
     notifyListeners();
   }
 
   void setSupportingDocument(File? file) {
+    _student = _student.copyWith(photoUrl: file?.path);
     _supportingDocument = file;
     notifyListeners();
   }
 
   void setEligibilityConfirmed(bool confirmed) {
     _eligibilityConfirmed = confirmed;
+    _student = _student.copyWith(
+      status: confirmed ? "Eligible" : "Not Eligible",
+    );
     notifyListeners();
   }
 
@@ -80,22 +94,12 @@ class StudentViewModel extends ChangeNotifier {
     if (_supportingDocument == null) return null;
 
     try {
-      final String path = await _supabaseClient.storage
-          .from('supporting_documents')
-          .upload(
-            '${_supabaseClient.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.pdf',
-            _supportingDocument!,
-            fileOptions: const FileOptions(upsert: true),
-          );
-      return _supabaseClient.storage
-          .from('supporting_documents')
-          .getPublicUrl(path);
-    } on StorageException catch (e) {
-      _errorMessage = 'Document upload failed: ${e.message}';
-      notifyListeners();
-      return null;
+      return _repository.uploadStudentDocs(
+        _student.studentEmail!,
+        _repository.pickStudentDocs() as File,
+      );
     } catch (e) {
-      _errorMessage = 'An unexpected error occurred during document upload: $e';
+      Exceptionerror.snackBarError('Document upload failed: ${e.toString()}');
       notifyListeners();
       return null;
     }
@@ -107,34 +111,22 @@ class StudentViewModel extends ChangeNotifier {
     _errorMessage = null;
     _successMessage = null;
     notifyListeners();
-
-    // Basic validation before submission
-    if (_yearOfStudy == null || _module1 == null || !_eligibilityConfirmed) {
-      _errorMessage =
-          'Please fill in all required fields and confirm eligibility.';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-
     try {
-      final userId = _supabaseClient.auth.currentUser?.id;
-      if (userId == null) {
-        _errorMessage = 'User not authenticated.';
+      // Basic validation before submission
+      if (_student.yearOfStudy == null ||
+          _student.firstModule == null ||
+          !_eligibilityConfirmed) {
+        _errorMessage =
+            'Please fill in all required fields and confirm eligibility.';
         _isLoading = false;
         notifyListeners();
         return false;
       }
-
       // Check if the user has already submitted an application
       //this will give an error,check columns and database before - KING
-      final existingApplications = await _supabaseClient
-          .from('student_applications')
-          .select('id')
-          .eq('student_id', userId)
-          .limit(1);
+      final existingApplications = await _repository.getStudent(_student);
 
-      if (existingApplications.isNotEmpty) {
+      if (existingApplications?.studentEmail != null) {
         _errorMessage = 'You have already submitted an application.';
         _isLoading = false;
         notifyListeners();
@@ -142,37 +134,28 @@ class StudentViewModel extends ChangeNotifier {
       }
 
       //Upload document via Repository if one was picked
-      String? documentUrl;
       if (_supportingDocument != null) {
-        documentUrl = await _repository.uploadStudentDocs(
-          userId,
-          _supportingDocument!,
+        _student.photoUrl = await _repository.uploadStudentDocs(
+          _student.studentEmail!,
+          _repository.pickStudentDocs() as File,
         );
       }
-      if (documentUrl == null) {
+      if (_student.photoUrl == null) {
         _isLoading = false;
         notifyListeners();
         return false;
       }
 
       //Create via Repository
-      final success = await _repository.createApplication(
-        studentId: userId,
-        yearOfStudy: _yearOfStudy!,
-        module1: _module1!,
-        eligibilityConfirmed: eligibilityConfirmed,
-        documentUrl: documentUrl,
-      );
-      if (success) {
-        await loadStudentData();
-      } else {
-        _errorMessage = 'Sumission failed. Please try again.';
-        _isLoading = false;
-        notifyListeners();
+      final success = await _repository.createStudent(_student);
+      if (success != null) {
+        return true;
       }
-      return success;
+      return false;
     } catch (e) {
-      _errorMessage = 'An unexpected error occurred: $e';
+      Exceptionerror.alertDialogError(
+        'An unexpected error occurred: $e.toString()',
+      );
       _isLoading = false;
       notifyListeners();
       return false;
@@ -195,32 +178,21 @@ class StudentViewModel extends ChangeNotifier {
       final userId = Supabase.instance.client.auth.currentUser?.id;
 
       //uplaod new document via Repository
-      String? documentUrl;
       if (_supportingDocument != null && userId != null) {
-        documentUrl = await _repository.uploadStudentDocs(
+        _student.photoUrl = await _repository.uploadStudentDocs(
           userId,
           _supportingDocument!,
         );
       }
 
       //Update via Repository
-      final success = await _repository.updateApplication(
-        applicationId: applicationId,
-        yearOfStudy: yearOfStudy,
-        module1: module1,
-        eligibilityConfirmed: eligibilityConfirmed,
-        documentUrl: documentUrl,
-      );
-      if (success) {
-        await loadStudentData();
-      } else {
-        _errorMessage = 'Update failed. Please try again.';
-        _isLoading = false;
-        notifyListeners();
-      }
+      final success = await _repository.updateStudent(_student);
+      notifyListeners();
       return success;
     } catch (e) {
-      _errorMessage = 'An unexpected error occurred : $e';
+      Exceptionerror.alertDialogError(
+        'An unexpected error occurred: $e.toString()',
+      );
       _isLoading = false;
       notifyListeners();
       return false;
@@ -237,9 +209,6 @@ class StudentViewModel extends ChangeNotifier {
 
   //Reset form fields(call after successful submit)
   void resetForm() {
-    _yearOfStudy = null;
-    _module1 = null;
-    _module2 = null;
     _supportingDocument = null;
     _eligibilityConfirmed = false;
     _errorMessage = null;
@@ -248,11 +217,12 @@ class StudentViewModel extends ChangeNotifier {
 
   Future<void> pickDocument() async {
     final fileUrl = await _repository.uploadStudentDocs(
-      studentID!,
-      supportingDocument!,
+      _student.studentEmail!,
+      _repository.pickStudentDocs() as File,
     );
+
     if (fileUrl != null) {
-      student?.supportingDocumentUrl = fileUrl;
+      _student.photoUrl = fileUrl;
       _supportingDocument = fileUrl as File?;
       notifyListeners();
     }
