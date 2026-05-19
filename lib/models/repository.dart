@@ -5,12 +5,12 @@ import 'package:student_assistant/models/exceptionError.dart';
 import 'package:student_assistant/models/student_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+//PLEASE DO NOT MAKE CHANGES!!!
 class Repository {
   // Supabase table clients
   final adminClient = Supabase.instance.client.from('admin');
   final studentClient = Supabase.instance.client.from('student');
   final String bucketName = 'student-bucket';
-  
 
   // Local cache
   Admin? _admin;
@@ -112,9 +112,10 @@ class Repository {
   // Delete student
   Future<bool> deleteStudent(Student student) async {
     try {
-      await studentClient
-          .delete()
-          .eq('studentEmail', student.studentEmail.toString());
+      await studentClient.delete().eq(
+        'studentEmail',
+        student.studentEmail.toString(),
+      );
 
       return true;
     } catch (e) {
@@ -184,37 +185,35 @@ class Repository {
   // Delete admin
   Future<bool> deleteAdmin(Admin admin) async {
     try {
-      await adminClient
-          .delete()
-          .eq('AdminEmail', admin.email.toString());
+      await adminClient.delete().eq('AdminEmail', admin.email.toString());
 
       return true;
     } catch (e) {
       return false;
     }
   }
+
   //-------------------------DOCUMENT STORAGE--------------------------
   // Pick document
   Future<File?> pickStudentDocs() async {
-    FilePickerResult? result = await FilePicker.pickFiles(allowMultiple: true);
+    FilePickerResult? result = await FilePicker.pickFiles();
 
     if (result != null) {
-      List<File> files = result.paths.map((path) => File(path!)).toList();
+      File file = File(result.files.single.path!);
+      return file;
     } else {
-      Exceptionerror.SnackBarError('User cancelled document selection');
+      Exceptionerror.snackBarError('User cancelled document selection');
+      return null;
     }
   }
 
   // Upload document
-  Future<String?> uploadStudentDocs(
-    String studentId,
-    File file,
-  ) async {
+  Future<String?> uploadStudentDocs(String studentId, File file) async {
     try {
-      final ext = file.path.split('.').last;
+      (File?,) file = pickStudentDocs() as (File?,);
+      final ext = file.toString().split('.').last;
 
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
 
       final path = '$studentId/$fileName';
 
@@ -222,7 +221,7 @@ class Repository {
           .from(bucketName)
           .upload(
             path,
-            file,
+            file as File,
             fileOptions: const FileOptions(upsert: true),
           );
 
@@ -230,6 +229,7 @@ class Repository {
           .from(bucketName)
           .getPublicUrl(path);
     } catch (e) {
+      Exceptionerror.snackBarError('Error uploading document');
       return null;
     }
   }
@@ -237,21 +237,19 @@ class Repository {
   // Delete document
   Future<bool> deleteStudentDocs(String filePath) async {
     try {
-      await Supabase.instance.client.storage
-          .from(bucketName)
-          .remove([filePath]);
+      await Supabase.instance.client.storage.from(bucketName).remove([
+        filePath,
+      ]);
 
       return true;
     } catch (e) {
+      Exceptionerror.snackBarError('Error deleting document');
       return false;
     }
   }
 
   // Replace document
-  Future<String?> updateStudentDocs(
-    String studentId,
-    String oldPath,
-  ) async {
+  Future<String?> updateStudentDocs(String studentId, String oldPath) async {
     try {
       final newFile = await pickStudentDocs();
 
@@ -259,11 +257,9 @@ class Repository {
 
       await deleteStudentDocs(oldPath);
 
-      return await uploadStudentDocs(
-        studentId,
-        newFile,
-      );
+      return await uploadStudentDocs(studentId, newFile);
     } catch (e) {
+      Exceptionerror.snackBarError('Error updating document');
       return null;
     }
   }
