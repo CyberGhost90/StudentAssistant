@@ -23,12 +23,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => StudentViewModel(Supabase.instance.client),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => AdminViewModel(Supabase.instance.client),
-        ),
+        ChangeNotifierProvider(create: (_) => StudentViewModel()),
+        ChangeNotifierProvider(create: (_) => AdminViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
